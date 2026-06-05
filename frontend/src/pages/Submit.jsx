@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async'
 import Navbar from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +16,14 @@ const STATES = [
 export default function Submit() {
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Submit a Tournament — Esportorium</title>
+        <meta name="description" content="List your Mobile Legends tournament on Esportorium. Free, no account needed. Fill in the form and our team will review your submission within 1–2 business days." />
+        <link rel="canonical" href="https://esportorium.com/submit" />
+        <meta property="og:url" content="https://esportorium.com/submit" />
+        <meta property="og:title" content="Submit a Tournament — Esportorium" />
+        <meta property="og:description" content="List your ML tournament on Esportorium. Free, no account needed." />
+      </Helmet>
       <Navbar />
 
       <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">

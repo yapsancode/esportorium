@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Helmet } from 'react-helmet-async'
+import JsonLd from '@/components/JsonLd'
 import { Link } from 'react-router-dom'
 import Navbar from '@/components/Navbar'
 import { Separator } from '@/components/ui/separator'
@@ -90,9 +92,33 @@ const FAQS = [
   },
 ]
 
+const FAQ_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": FAQS.flatMap((group) =>
+    group.items.map((item) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.a,
+      },
+    }))
+  ),
+}
+
 export default function QnA() {
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>FAQ — Esportorium Q&amp;A</title>
+        <meta name="description" content="Answers to common questions about submitting tournaments, how listings work, eligibility, and the Esportorium platform." />
+        <link rel="canonical" href="https://esportorium.com/qna" />
+        <meta property="og:url" content="https://esportorium.com/qna" />
+        <meta property="og:title" content="Frequently Asked Questions — Esportorium" />
+        <meta property="og:description" content="Got questions about submitting or listing a tournament? Find your answers here." />
+      </Helmet>
+      <JsonLd schema={FAQ_SCHEMA} />
       <Navbar />
 
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">

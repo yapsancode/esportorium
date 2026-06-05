@@ -1,10 +1,12 @@
+import { Helmet } from 'react-helmet-async'
+import JsonLd from '@/components/JsonLd'
 import Navbar from '@/components/Navbar'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
-import { Trophy, MapPin, Users, Zap, Info } from 'lucide-react'
+import { Trophy, MapPin, Users, Zap, Info, Code, ExternalLink } from 'lucide-react'
 import logo from '@/assets/esportorium-logo.png'
 
 const ROADMAP = [
@@ -13,9 +15,31 @@ const ROADMAP = [
   { phase: 'V3', status: 'upcoming', items: ['Native registration flow', 'Player profiles', 'Monetisation & featured listings', 'Mobile app'] },
 ]
 
+const ORG_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Esportorium",
+  "url": "https://esportorium.com",
+  "logo": "https://esportorium.com/android-chrome-512x512.png",
+  "description": "Malaysia's curated esports tournament discovery platform for Mobile Legends.",
+  "email": "team.iidevstudio@gmail.com",
+  "foundingDate": "2025",
+  "areaServed": "MY",
+  "sameAs": []
+}
+
 export default function About() {
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>About Esportorium — Malaysia Esports Tournament Platform</title>
+        <meta name="description" content="Learn about Esportorium — Malaysia's curated esports tournament discovery platform. Our mission, what we stand for, and the roadmap ahead." />
+        <link rel="canonical" href="https://esportorium.com/about" />
+        <meta property="og:url" content="https://esportorium.com/about" />
+        <meta property="og:title" content="About Esportorium" />
+        <meta property="og:description" content="Malaysia's curated esports tournament discovery platform — built for players who want to compete, and organisers who want to be found." />
+      </Helmet>
+      <JsonLd schema={ORG_SCHEMA} />
       <Navbar />
 
       <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
@@ -111,6 +135,33 @@ export default function About() {
         </section>
 
         <Separator className="my-10" />
+
+        {/* Built by */}
+        <section className="mb-12">
+          <Card className="overflow-hidden border-border/50">
+            <CardContent className="flex flex-col items-center gap-4 py-8 text-center sm:flex-row sm:items-start sm:text-left sm:gap-6">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                <Code className="h-7 w-7 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1">Built &amp; maintained by</p>
+                <h3 className="text-lg font-bold text-foreground">iidev Studio</h3>
+                <p className="mt-1 text-sm text-muted-foreground leading-relaxed max-w-lg">
+                  Helping Malaysian businesses grow with digitalisation — high-performance websites, e-commerce platforms, and digital solutions.
+                </p>
+                <a
+                  href="https://www.iidevstudio.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
+                  Visit iidevstudio.com
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
 
         {/* CTA */}
         <section className="rounded-xl bg-muted p-8 text-center">

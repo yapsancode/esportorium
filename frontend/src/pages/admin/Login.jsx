@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,8 @@ import logo from '@/assets/esportorium-logo.png'
 export default function AdminLogin() {
   const navigate = useNavigate()
 
+  // noindex — admin pages must never appear in search results
+
   function handleSubmit(e) {
     e.preventDefault()
     // TODO: call POST /api/admin/auth/login
@@ -16,6 +19,10 @@ export default function AdminLogin() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <Helmet>
+        <title>Admin Login — Esportorium</title>
+        <meta name="robots" content="noindex,nofollow" />
+      </Helmet>
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center items-center">
           <img src={logo} alt="Esportorium" className="mb-2 h-12 w-12 rounded-lg" />

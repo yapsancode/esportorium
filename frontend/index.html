@@ -3,7 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Default title & description (react-helmet-async overrides these per-page) -->
     <title>Esportorium — Malaysia Esports Tournaments</title>
+    <meta name="description" content="Discover upcoming, live, and past Mobile Legends tournaments across Malaysia. Free to browse. Free to list. Curated by Esportorium." />
+    <meta name="keywords" content="malaysia esports tournament, mobile legends tournament malaysia, turnamen ml malaysia, esports malaysia 2026, pertandingan esport malaysia" />
+    <meta name="author" content="iidev Studio" />
+
+    <!-- Canonical (react-helmet-async overrides per-page) -->
+    <link rel="canonical" href="https://esportorium.com/" />
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="Esportorium" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://esportorium.com/" />
+    <meta property="og:title" content="Esportorium — Malaysia Esports Tournaments" />
+    <meta property="og:description" content="Discover upcoming, live, and past Mobile Legends tournaments across Malaysia. Free to browse. Free to list." />
+    <meta property="og:image" content="https://esportorium.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_MY" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Esportorium — Malaysia Esports Tournaments" />
+    <meta name="twitter:description" content="Discover upcoming, live, and past Mobile Legends tournaments across Malaysia." />
+    <meta name="twitter:image" content="https://esportorium.com/og-image.png" />
 
     <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -12,6 +37,21 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#B5522A" />
+
+    <!-- Preconnect hints -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!--
+      Google Analytics 4 — add your Measurement ID when ready:
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+      </script>
+    -->
   </head>
   <body>
     <div id="root"></div>

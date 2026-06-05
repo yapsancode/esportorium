@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async'
 import Navbar from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,6 +15,10 @@ const PLACEHOLDER_TOURNAMENTS = [
 export default function AdminTournaments() {
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Manage Tournaments — Esportorium Admin</title>
+        <meta name="robots" content="noindex,nofollow" />
+      </Helmet>
       <Navbar />
 
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">

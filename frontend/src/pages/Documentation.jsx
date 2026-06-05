@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import Navbar from '@/components/Navbar'
 import { Separator } from '@/components/ui/separator'
@@ -22,6 +23,7 @@ const sections = [
 export default function Documentation() {
   const [activeSection, setActiveSection] = useState('overview')
 
+
   // Scroll spy — highlight the sidebar link for whichever section is in view
   useEffect(() => {
     const observers = sections.map(({ id }) => {
@@ -39,6 +41,14 @@ export default function Documentation() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Platform Guide — Esportorium Docs</title>
+        <meta name="description" content="Complete guide to Esportorium: how to submit a tournament, eligibility criteria, image guidelines, and a full field reference for organisers." />
+        <link rel="canonical" href="https://esportorium.com/docs" />
+        <meta property="og:url" content="https://esportorium.com/docs" />
+        <meta property="og:title" content="Platform Guide — Esportorium Docs" />
+        <meta property="og:description" content="How to list your ML tournament on Esportorium — eligibility, submission steps, image specs, and field reference." />
+      </Helmet>
       <Navbar />
 
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
