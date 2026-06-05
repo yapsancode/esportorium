@@ -1,4 +1,5 @@
 import Navbar from '@/components/Navbar'
+import Preloader from '@/components/ui/preloader'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +16,7 @@ const STATES = [
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
+      <Preloader />
       <Navbar />
 
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
