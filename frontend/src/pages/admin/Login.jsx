@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import logo from '@/assets/esportorium-logo.png'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
@@ -16,7 +17,8 @@ export default function AdminLogin() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center items-center">
+          <img src={logo} alt="Esportorium" className="mb-2 h-12 w-12 rounded-lg" />
           <CardTitle className="text-2xl font-extrabold">Esportorium</CardTitle>
           <CardDescription>Admin access only</CardDescription>
         </CardHeader>
