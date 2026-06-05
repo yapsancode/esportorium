@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import JsonLd from '@/components/JsonLd'
 import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 import Preloader from '@/components/ui/preloader'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -228,6 +229,7 @@ export default function Home() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   )
 }

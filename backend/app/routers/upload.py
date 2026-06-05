@@ -1,8 +1,11 @@
+import io
 import os
 import uuid
 import boto3
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from app.routers.admin import get_current_admin
+
+MAX_UPLOAD_BYTES = 2 * 1024 * 1024  # 2 MB
 
 router = APIRouter(prefix="/api/upload", tags=["upload"])
 
@@ -23,6 +26,10 @@ async def upload_banner(file: UploadFile = File(...)):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
 
+    contents = await file.read()
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 2 MB.")
+
     bucket = os.getenv("R2_BUCKET_NAME")
     public_url_base = os.getenv("R2_PUBLIC_URL")
     ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "jpg"
@@ -30,7 +37,7 @@ async def upload_banner(file: UploadFile = File(...)):
 
     client = get_r2_client()
     client.upload_fileobj(
-        file.file,
+        io.BytesIO(contents),
         bucket,
         key,
         ExtraArgs={"ContentType": file.content_type},
