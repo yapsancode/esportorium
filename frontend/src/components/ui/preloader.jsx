@@ -3,13 +3,15 @@ import { useLayoutEffect, useRef, useState } from "react";
 
 const MIN_DISPLAY_MS = 3000; // 3000 miliseconds
 
-export default function Preloader() {
+export default function Preloader({ show = true }) {
   const loaderRef = useRef(null);
   const textRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
 
   // Wait for both document.readyState === "complete" AND the minimum delay
   useLayoutEffect(() => {
+    if (!show) return;
+
     let animationFrame;
     const startTime = Date.now();
 
@@ -24,10 +26,12 @@ export default function Preloader() {
 
     checkReady();
     return () => cancelAnimationFrame(animationFrame);
-  }, []);
+  }, [show]);
 
   // Run exit animation once the delay + readiness condition is met
   useLayoutEffect(() => {
+    if (!show) return;
+
     if (loaded && loaderRef.current && textRef.current) {
       const tl = gsap.timeline({
         defaults: { ease: "power2.inOut" },
@@ -51,7 +55,9 @@ export default function Preloader() {
         "<"
       );
     }
-  }, [loaded]);
+  }, [loaded, show]);
+
+  if (!show) return null;
 
   return (
     <div

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import Navbar from '@/components/Navbar'
 import Preloader from '@/components/ui/preloader'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -13,10 +14,22 @@ const STATES = [
   'Perlis', 'Putrajaya', 'Labuan',
 ]
 
+const PRELOADER_KEY = 'esportorium_preloader_shown'
+
 export default function Home() {
+  // Show preloader only on the first visit this session
+  const [showPreloader] = useState(() => {
+    const alreadyShown = sessionStorage.getItem(PRELOADER_KEY)
+    if (!alreadyShown) {
+      sessionStorage.setItem(PRELOADER_KEY, 'true')
+      return true
+    }
+    return false
+  })
+
   return (
     <div className="min-h-screen bg-background">
-      <Preloader />
+      <Preloader show={showPreloader} />
       <Navbar />
 
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
