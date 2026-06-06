@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import logo from '@/assets/esportorium-logo.png'
@@ -11,7 +11,13 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const location = useLocation()
+  const navigate = useNavigate()
   const isAdmin = location.pathname.startsWith('/admin')
+
+  function handleLogout() {
+    localStorage.removeItem('admin_token')
+    navigate('/admin/login')
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
@@ -57,6 +63,7 @@ export default function Navbar() {
                 <Link to="/admin/tournaments">
                   <Button variant="ghost" size="sm">Tournaments</Button>
                 </Link>
+                <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
               </>
             ) : (
               <>

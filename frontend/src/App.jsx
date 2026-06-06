@@ -8,6 +8,7 @@ import About from '@/pages/About'
 import AdminLogin from '@/pages/admin/Login'
 import AdminDashboard from '@/pages/admin/Dashboard'
 import AdminTournaments from '@/pages/admin/Tournaments'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
 export default function App() {
   return (
@@ -20,8 +21,8 @@ export default function App() {
         <Route path="/qna" element={<QnA />} />
         <Route path="/about" element={<About />} />
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/tournaments" element={<AdminTournaments />} />
+        <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/tournaments" element={<ProtectedRoute><AdminTournaments /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   )

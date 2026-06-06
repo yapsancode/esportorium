@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import JsonLd from '@/components/JsonLd'
 import Navbar from '@/components/Navbar'
@@ -11,21 +12,12 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Button } from '@/components/ui/button'
 import { LayoutGrid, List, Wifi, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { apiFetch } from '@/lib/api'
 
 const STATES = [
-  'All States', 'Kuala Lumpur', 'Selangor', 'Johor', 'Penang', 'Sabah', 'Sarawak',
-  'Perak', 'Kedah', 'Kelantan', 'Terengganu', 'Pahang', 'Negeri Sembilan', 'Melaka',
-  'Perlis', 'Putrajaya', 'Labuan',
-]
-
-// Placeholder tournament data with mixed formats
-const PLACEHOLDER_TOURNAMENTS = [
-  { id: 1, title: 'ML Warriors Open 2025',   status: 'upcoming', format: 'online',  state: null,        organiser: 'KL Esports Club',   prize: 500 },
-  { id: 2, title: 'Sabah Regional Cup S1',   status: 'current',  format: 'offline', state: 'Sabah',     organiser: 'Borneo Gaming',     prize: 1000 },
-  { id: 3, title: 'SEA Pro Series Q1 2025',  status: 'past',     format: 'online',  state: null,        organiser: 'Pro League MY',     prize: 2000 },
-  { id: 4, title: 'KL City Invitational',    status: 'upcoming', format: 'offline', state: 'Kuala Lumpur', organiser: 'KL Gaming Hub',  prize: 750 },
-  { id: 5, title: 'Weekend Warrior Cup',     status: 'upcoming', format: 'online',  state: null,        organiser: 'GG Network',        prize: 300 },
-  { id: 6, title: 'Penang Pride Tournament', status: 'past',     format: 'offline', state: 'Penang',    organiser: 'Northern Esports',  prize: 500 },
+  'Kuala Lumpur', 'Selangor', 'Johor', 'Penang', 'Sabah', 'Sarawak',
+  'Perak', 'Kedah', 'Kelantan', 'Terengganu', 'Pahang', 'Negeri Sembilan',
+  'Melaka', 'Perlis', 'Putrajaya', 'Labuan',
 ]
 
 const FORMAT_OPTIONS = [
@@ -35,6 +27,12 @@ const FORMAT_OPTIONS = [
 ]
 
 const PRELOADER_KEY = 'esportorium_preloader_shown'
+
+function formatDateRange(start, end) {
+  const fmt = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' })
+  if (start === end) return fmt(start)
+  return `${fmt(start)} – ${fmt(end)}`
+}
 
 export default function Home() {
   const [showPreloader] = useState(() => {
@@ -46,26 +44,42 @@ export default function Home() {
     return false
   })
 
+  const [tournaments, setTournaments] = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [error, setError]             = useState('')
+
   const [statusFilter, setStatusFilter] = useState('upcoming')
   const [formatFilter, setFormatFilter] = useState('all')
-  const [stateFilter,  setStateFilter]  = useState('all-states')
+  const [stateFilter,  setStateFilter]  = useState('')
   const [viewMode,     setViewMode]     = useState('grid')
 
-  // When switching to Online, the state filter is not meaningful — reset it
+  useEffect(() => {
+    async function load() {
+      setLoading(true)
+      setError('')
+      try {
+        const data = await apiFetch('/api/tournaments')
+        setTournaments(data)
+      } catch {
+        setError('Failed to load tournaments. Please try again later.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
+
   function handleFormatChange(val) {
     setFormatFilter(val)
-    if (val === 'online') setStateFilter('all-states')
+    if (val === 'online') setStateFilter('')
   }
 
-  const filtered = PLACEHOLDER_TOURNAMENTS.filter((t) => {
+  const filtered = tournaments.filter((t) => {
     if (statusFilter !== 'all' && t.status !== statusFilter) return false
     if (formatFilter !== 'all' && t.format !== formatFilter) return false
-    if (
-      formatFilter !== 'online' &&
-      stateFilter !== 'all-states' &&
-      t.format === 'offline' &&
-      t.state?.toLowerCase().replace(' ', '-') !== stateFilter
-    ) return false
+    if (stateFilter && formatFilter !== 'online') {
+      if (t.format === 'offline' && t.state !== stateFilter) return false
+    }
     return true
   })
 
@@ -149,26 +163,20 @@ export default function Home() {
               ))}
             </div>
 
-            {/* State select — disabled when Online is selected */}
+            {/* State select */}
             <div className="relative">
               <Select
-                value={stateFilter}
-                onValueChange={setStateFilter}
+                value={stateFilter || 'all-states'}
+                onValueChange={(v) => setStateFilter(v === 'all-states' ? '' : v)}
                 disabled={stateDisabled}
               >
-                <SelectTrigger
-                  className={cn(
-                    'w-44',
-                    stateDisabled && 'opacity-40 cursor-not-allowed'
-                  )}
-                >
+                <SelectTrigger className={cn('w-44', stateDisabled && 'opacity-40 cursor-not-allowed')}>
                   <SelectValue placeholder="Filter by state" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all-states">All States</SelectItem>
                   {STATES.map((s) => (
-                    <SelectItem key={s} value={s.toLowerCase().replace(' ', '-')}>
-                      {s}
-                    </SelectItem>
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -179,7 +187,6 @@ export default function Home() {
               )}
             </div>
 
-            {/* Spacer */}
             <div className="flex-1" />
 
             {/* Grid / List toggle */}
@@ -188,10 +195,7 @@ export default function Home() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setViewMode('grid')}
-                className={cn(
-                  'rounded-none border-r border-border',
-                  viewMode === 'grid' && 'bg-muted'
-                )}
+                className={cn('rounded-none border-r border-border', viewMode === 'grid' && 'bg-muted')}
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
@@ -199,10 +203,7 @@ export default function Home() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setViewMode('list')}
-                className={cn(
-                  'rounded-none',
-                  viewMode === 'list' && 'bg-muted'
-                )}
+                className={cn('rounded-none', viewMode === 'list' && 'bg-muted')}
               >
                 <List className="h-4 w-4" />
               </Button>
@@ -211,7 +212,15 @@ export default function Home() {
         </div>
 
         {/* Results */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <p className="text-muted-foreground">Loading tournaments…</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center py-20 text-center">
+            <p className="text-sm text-red-500">{error}</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="text-lg font-semibold text-foreground">No tournaments found</p>
             <p className="mt-1 text-sm text-muted-foreground">Try adjusting your filters.</p>
@@ -219,9 +228,7 @@ export default function Home() {
         ) : (
           <div className={cn(
             'gap-4',
-            viewMode === 'grid'
-              ? 'grid sm:grid-cols-2 lg:grid-cols-3'
-              : 'flex flex-col'
+            viewMode === 'grid' ? 'grid sm:grid-cols-2 lg:grid-cols-3' : 'flex flex-col'
           )}>
             {filtered.map((t) => (
               <TournamentCard key={t.id} tournament={t} viewMode={viewMode} />
@@ -235,54 +242,62 @@ export default function Home() {
 }
 
 function TournamentCard({ tournament, viewMode }) {
-  const { title, status, format, state, organiser, prize } = tournament
-
-  const location = format === 'online' ? 'Online' : state
+  const { id, title, status, format, state, organiser_name, prize_pool_rm, start_date, end_date, banner_image } = tournament
+  const location = format === 'online' ? 'Online' : (state || 'Malaysia')
+  const dateRange = formatDateRange(start_date, end_date)
 
   if (viewMode === 'list') {
     return (
-      <Card className="overflow-hidden transition-shadow hover:shadow-md cursor-pointer">
-        <div className="flex items-center gap-4 p-4">
-          <div className="h-16 w-24 shrink-0 rounded-md bg-muted" />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <p className="font-semibold text-foreground truncate">{title}</p>
-              <div className="flex items-center gap-2 shrink-0">
-                <FormatBadge format={format} />
-                <Badge variant={status}>{capitalise(status)}</Badge>
+      <Link to={`/tournament/${id}`}>
+        <Card className="overflow-hidden transition-shadow hover:shadow-md cursor-pointer">
+          <div className="flex items-center gap-4 p-4">
+            <div className="h-16 w-24 shrink-0 rounded-md bg-muted overflow-hidden">
+              {banner_image && <img src={banner_image} alt={title} className="h-full w-full object-cover" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-semibold text-foreground truncate">{title}</p>
+                <div className="flex items-center gap-2 shrink-0">
+                  <FormatBadge format={format} />
+                  <Badge variant={status}>{capitalise(status)}</Badge>
+                </div>
+              </div>
+              <p className="mt-0.5 text-sm text-muted-foreground">{organiser_name}</p>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span>📅 {dateRange}</span>
+                <span>📍 {location}</span>
+                <span>🏆 RM {prize_pool_rm.toLocaleString()}</span>
               </div>
             </div>
-            <p className="mt-0.5 text-sm text-muted-foreground">{organiser}</p>
-            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              <span>📅 1 Jan – 15 Jan 2025</span>
-              <span>📍 {location}</span>
-              <span>🏆 RM {prize.toLocaleString()}</span>
-            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </Link>
     )
   }
 
   return (
-    <Card className="overflow-hidden transition-shadow hover:shadow-md cursor-pointer">
-      <div className="aspect-video w-full bg-muted" />
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-base leading-snug">{title}</CardTitle>
-          <Badge variant={status} className="shrink-0">{capitalise(status)}</Badge>
+    <Link to={`/tournament/${id}`}>
+      <Card className="overflow-hidden transition-shadow hover:shadow-md cursor-pointer">
+        <div className="aspect-video w-full bg-muted overflow-hidden">
+          {banner_image && <img src={banner_image} alt={title} className="h-full w-full object-cover" />}
         </div>
-        <CardDescription>{organiser}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-1 text-sm text-muted-foreground">
-        <p>📅 1 Jan – 15 Jan 2025</p>
-        <div className="flex items-center justify-between">
-          <p>📍 {location}</p>
-          <FormatBadge format={format} />
-        </div>
-        <p>🏆 RM {prize.toLocaleString()} prize pool</p>
-      </CardContent>
-    </Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="text-base leading-snug">{title}</CardTitle>
+            <Badge variant={status} className="shrink-0">{capitalise(status)}</Badge>
+          </div>
+          <CardDescription>{organiser_name}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-1 text-sm text-muted-foreground">
+          <p>📅 {dateRange}</p>
+          <div className="flex items-center justify-between">
+            <p>📍 {location}</p>
+            <FormatBadge format={format} />
+          </div>
+          <p>🏆 RM {prize_pool_rm.toLocaleString()} prize pool</p>
+        </CardContent>
+      </Card>
+    </Link>
   )
 }
 
@@ -290,9 +305,7 @@ function FormatBadge({ format }) {
   return (
     <span className={cn(
       'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
-      format === 'online'
-        ? 'bg-blue-50 text-blue-700'
-        : 'bg-orange-50 text-orange-700'
+      format === 'online' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'
     )}>
       {format === 'online'
         ? <><Wifi className="h-3 w-3" /> Online</>

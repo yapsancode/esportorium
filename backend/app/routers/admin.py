@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt as _bcrypt
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.tournament import Tournament
@@ -12,7 +12,9 @@ from app.schemas.tournament import TournamentOut, TournamentCreate, TournamentUp
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def _verify_password(plain: str, hashed: str) -> bool:
+    return _bcrypt.checkpw(plain.encode(), hashed.encode())
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/admin/auth/login")
 
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me")
@@ -40,7 +42,7 @@ def admin_login(data: AuthLogin):
     """Authenticate admin and return a JWT."""
     admin_username = os.getenv("ADMIN_USERNAME")
     admin_hash = os.getenv("ADMIN_PASSWORD_HASH")
-    if data.username != admin_username or not pwd_context.verify(data.password, admin_hash):
+    if data.username != admin_username or not _verify_password(data.password, admin_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     token = create_access_token({"sub": data.username})
     return {"access_token": token}

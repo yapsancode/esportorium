@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import JsonLd from '@/components/JsonLd'
 import Navbar from '@/components/Navbar'
@@ -7,38 +7,36 @@ import Footer from '@/components/Footer'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Share2, ExternalLink, ChevronDown, ChevronUp, CalendarPlus, MessageCircle, Copy, Check } from 'lucide-react'
+import { Share2, ExternalLink, ChevronDown, ChevronUp, CalendarPlus, MessageCircle, Check, ArrowLeft } from 'lucide-react'
+import { apiFetch } from '@/lib/api'
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
-/** Detect a Malaysian phone number and return a wa.me URL, or null. */
+function formatDate(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-MY', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  })
+}
+
 function whatsAppUrl(contact) {
   const digits = contact.replace(/\D/g, '')
   if (digits.length < 9) return null
-  // Normalise to country code 60 (Malaysia)
-  const withCode = digits.startsWith('60')
-    ? digits
-    : `60${digits.replace(/^0/, '')}`
+  const withCode = digits.startsWith('60') ? digits : `60${digits.replace(/^0/, '')}`
   return `https://wa.me/${withCode}`
 }
 
-/** Generate a .ics calendar file and trigger download. */
 function downloadIcs({ title, startDate, endDate, url }) {
-  const fmt = (d) => d.replace(/-/g, '')   // "2025-01-01" → "20250101"
+  const fmt = (d) => d.replace(/-/g, '')
   const ics = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Esportorium//EN',
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Esportorium//EN',
     'BEGIN:VEVENT',
     `DTSTART:${fmt(startDate)}`,
     `DTEND:${fmt(endDate)}`,
     `SUMMARY:${title}`,
     `DESCRIPTION:Mobile Legends tournament. Register at ${url}`,
     `URL:${url}`,
-    'END:VEVENT',
-    'END:VCALENDAR',
+    'END:VEVENT', 'END:VCALENDAR',
   ].join('\r\n')
-
   const blob = new Blob([ics], { type: 'text/calendar' })
   const link = document.createElement('a')
   link.href = URL.createObjectURL(blob)
@@ -47,12 +45,10 @@ function downloadIcs({ title, startDate, endDate, url }) {
   URL.revokeObjectURL(link.href)
 }
 
-/** Open Google Calendar with pre-filled event. */
 function googleCalendarUrl({ title, startDate, endDate, description }) {
   const fmt = (d) => d.replace(/-/g, '')
   const params = new URLSearchParams({
-    action: 'TEMPLATE',
-    text: title,
+    action: 'TEMPLATE', text: title,
     dates: `${fmt(startDate)}/${fmt(endDate)}`,
     details: description,
   })
@@ -63,60 +59,96 @@ function googleCalendarUrl({ title, startDate, endDate, description }) {
 
 export default function TournamentDetail() {
   const { id } = useParams()
-  const [bannerExpanded, setBannerExpanded] = useState(true)
-  const [copied, setCopied] = useState(false)
-  const [calendarOpen, setCalendarOpen] = useState(false)
+  const [tournament, setTournament] = useState(null)
+  const [loading, setLoading]       = useState(true)
+  const [notFound, setNotFound]     = useState(false)
 
-  // ── Placeholder data — replace with API response once wired ──────────────
-  const tournament = {
-    title: `Tournament ${id} — Placeholder Title`,
-    organiser: 'Placeholder Org',
-    contact: '+60123456789',   // phone → WhatsApp link; email → mailto
-    status: 'upcoming',
-    format: 'Online',
-    startDate: '2025-01-01',
-    endDate: '2025-01-15',
-    regDeadline: '2025-12-25',
-    maxTeams: 16,
-    prizeRm: 500,
-    additionalPrizes: 'Trophy, Jersey',
-    registrationLink: '#',
+  const [bannerExpanded, setBannerExpanded] = useState(true)
+  const [copied, setCopied]                 = useState(false)
+  const [calendarOpen, setCalendarOpen]     = useState(false)
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true)
+      try {
+        const data = await apiFetch(`/api/tournaments/${id}`)
+        setTournament(data)
+      } catch (err) {
+        setNotFound(true)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [id])
+
+  // ── Loading ────────────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex justify-center py-32">
+          <p className="text-muted-foreground">Loading…</p>
+        </div>
+        <Footer />
+      </div>
+    )
   }
 
-  const pageUrl   = window.location.href
-  const shareText = `🎮 Check out this ML tournament on Esportorium!\n${tournament.title}`
+  // ── Not found ──────────────────────────────────────────────────────────────
+  if (notFound || !tournament) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex flex-col items-center py-32 text-center">
+          <p className="text-xl font-bold">Tournament not found</p>
+          <p className="mt-2 text-muted-foreground">It may have been removed or the link is invalid.</p>
+          <Link to="/" className="mt-6">
+            <Button variant="outline"><ArrowLeft className="mr-2 h-4 w-4" /> Back to home</Button>
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
 
-  const description = `A Mobile Legends tournament open to Malaysian participants. Prize pool: RM ${tournament.prizeRm}. Register before ${tournament.regDeadline}.`
+  // ── Derived values ─────────────────────────────────────────────────────────
+  const {
+    title, status, format, state, venue,
+    start_date, end_date, registration_deadline,
+    prize_pool_rm, additional_prizes, max_teams,
+    organiser_name, organiser_contact,
+    registration_link, banner_image,
+  } = tournament
+
+  const pageUrl      = window.location.href
   const canonicalUrl = `https://esportorium.com/tournament/${id}`
+  const formatLabel  = format === 'online' ? 'Online' : `Offline${state ? ` · ${state}` : ''}`
+  const description  = `A Mobile Legends tournament open to Malaysian participants. Prize pool: RM ${prize_pool_rm.toLocaleString()}. Register before ${formatDate(registration_deadline)}.`
+  const wa           = whatsAppUrl(organiser_contact)
 
-  const wa = whatsAppUrl(tournament.contact)
-
-  // ── Event JSON-LD ─────────────────────────────────────────────────────────
   const eventSchema = {
     "@context": "https://schema.org",
     "@type": "Event",
-    "name": tournament.title,
+    "name": title,
     "description": description,
     "url": canonicalUrl,
-    "startDate": tournament.startDate,
-    "endDate": tournament.endDate,
+    "startDate": start_date,
+    "endDate": end_date,
     "eventStatus": "https://schema.org/EventScheduled",
-    "eventAttendanceMode": tournament.format === 'Online'
+    "eventAttendanceMode": format === 'online'
       ? "https://schema.org/OnlineEventAttendanceMode"
       : "https://schema.org/OfflineEventAttendanceMode",
-    "organizer": { "@type": "Organization", "name": tournament.organiser },
+    "organizer": { "@type": "Organization", "name": organiser_name },
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "MYR", "url": canonicalUrl },
   }
 
-  // ── Share handler (Web Share API → clipboard fallback) ────────────────────
   async function handleShare() {
     if (navigator.share) {
       try {
-        await navigator.share({ title: tournament.title, text: shareText, url: pageUrl })
+        await navigator.share({ title, text: `🎮 Check out this ML tournament on Esportorium!\n${title}`, url: pageUrl })
         return
-      } catch {
-        // User cancelled or share failed — fall through to clipboard
-      }
+      } catch { /* cancelled */ }
     }
     await navigator.clipboard.writeText(pageUrl)
     setCopied(true)
@@ -126,14 +158,15 @@ export default function TournamentDetail() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{tournament.title} — Esportorium</title>
+        <title>{title} — Esportorium</title>
         <meta name="description" content={description} />
         <link rel="canonical" href={canonicalUrl} />
         <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:title" content={`${tournament.title} — Esportorium`} />
+        <meta property="og:title" content={`${title} — Esportorium`} />
         <meta property="og:description" content={description} />
+        {banner_image && <meta property="og:image" content={banner_image} />}
         <meta property="og:type" content="website" />
-        <meta name="twitter:title" content={`${tournament.title} — Esportorium`} />
+        <meta name="twitter:title" content={`${title} — Esportorium`} />
         <meta name="twitter:description" content={description} />
       </Helmet>
       <JsonLd schema={eventSchema} />
@@ -141,20 +174,23 @@ export default function TournamentDetail() {
 
       <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
 
+        {/* Back link */}
+        <Link to="/" className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Back to tournaments
+        </Link>
+
         {/* Header */}
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <Badge variant={tournament.status}>{tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}</Badge>
-          <span className="text-sm text-muted-foreground">Mobile Legends · {tournament.format}</span>
+          <Badge variant={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>
+          <span className="text-sm text-muted-foreground">Mobile Legends · {formatLabel}</span>
         </div>
 
-        <h1 className="text-3xl font-extrabold text-foreground sm:text-4xl">
-          {tournament.title}
-        </h1>
-        <p className="mt-1 text-muted-foreground">Organised by {tournament.organiser}</p>
+        <h1 className="text-3xl font-extrabold text-foreground sm:text-4xl">{title}</h1>
+        <p className="mt-1 text-muted-foreground">Organised by {organiser_name}</p>
 
         {/* Action buttons */}
         <div className="mt-6 flex flex-wrap gap-3">
-          <a href={tournament.registrationLink} target="_blank" rel="noreferrer">
+          <a href={registration_link} target="_blank" rel="noreferrer">
             <Button>
               Register Now <ExternalLink className="ml-1 h-4 w-4" />
             </Button>
@@ -167,7 +203,6 @@ export default function TournamentDetail() {
             }
           </Button>
 
-          {/* Add to Calendar — expands inline */}
           <div className="relative">
             <Button variant="outline" onClick={() => setCalendarOpen(!calendarOpen)}>
               <CalendarPlus className="mr-2 h-4 w-4" /> Add to Calendar
@@ -175,15 +210,14 @@ export default function TournamentDetail() {
             {calendarOpen && (
               <div className="absolute left-0 top-12 z-10 w-52 rounded-lg border border-border bg-background shadow-md">
                 <button
-                  onClick={() => { downloadIcs({ title: tournament.title, startDate: tournament.startDate, endDate: tournament.endDate, url: pageUrl }); setCalendarOpen(false) }}
+                  onClick={() => { downloadIcs({ title, startDate: start_date, endDate: end_date, url: pageUrl }); setCalendarOpen(false) }}
                   className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm hover:bg-muted transition-colors rounded-t-lg"
                 >
                   Download .ics (Apple / Outlook)
                 </button>
                 <a
-                  href={googleCalendarUrl({ title: tournament.title, startDate: tournament.startDate, endDate: tournament.endDate, description })}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={googleCalendarUrl({ title, startDate: start_date, endDate: end_date, description })}
+                  target="_blank" rel="noreferrer"
                   onClick={() => setCalendarOpen(false)}
                   className="flex w-full items-center gap-2 px-4 py-3 text-sm hover:bg-muted transition-colors rounded-b-lg border-t border-border"
                 >
@@ -194,18 +228,22 @@ export default function TournamentDetail() {
           </div>
         </div>
 
-        {/* Collapsible banner */}
-        <div className="mt-8">
-          <button
-            onClick={() => setBannerExpanded(!bannerExpanded)}
-            className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Banner {bannerExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
-          {bannerExpanded && (
-            <div className="aspect-video w-full overflow-hidden rounded-lg bg-muted" />
-          )}
-        </div>
+        {/* Collapsible banner — only shown if banner_image exists */}
+        {banner_image && (
+          <div className="mt-8">
+            <button
+              onClick={() => setBannerExpanded(!bannerExpanded)}
+              className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Banner {bannerExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+            {bannerExpanded && (
+              <div className="aspect-video w-full overflow-hidden rounded-lg bg-muted">
+                <img src={banner_image} alt={`${title} banner`} className="h-full w-full object-cover" />
+              </div>
+            )}
+          </div>
+        )}
 
         <Separator className="my-8" />
 
@@ -214,43 +252,44 @@ export default function TournamentDetail() {
           <section>
             <h2 className="mb-4 text-lg font-bold">Details</h2>
             <dl className="space-y-3 text-sm">
-              <DetailRow label="Start Date" value="1 January 2025" />
-              <DetailRow label="End Date" value="15 January 2025" />
-              <DetailRow label="Registration Deadline" value="25 December 2024" />
-              <DetailRow label="Format" value={tournament.format} />
-              <DetailRow label="Max Teams" value={String(tournament.maxTeams)} />
+              <DetailRow label="Start Date"              value={formatDate(start_date)} />
+              <DetailRow label="End Date"                value={formatDate(end_date)} />
+              <DetailRow label="Registration Deadline"   value={formatDate(registration_deadline)} />
+              <DetailRow label="Format"                  value={formatLabel} />
+              {venue && <DetailRow label="Venue"         value={venue} />}
+              <DetailRow label="Max Teams"               value={String(max_teams)} />
             </dl>
           </section>
 
           <section>
             <h2 className="mb-4 text-lg font-bold">Prize Pool</h2>
             <dl className="space-y-3 text-sm">
-              <DetailRow label="Cash Prize" value={`RM ${tournament.prizeRm.toLocaleString()}`} />
-              <DetailRow label="Additional" value={tournament.additionalPrizes} />
+              <DetailRow label="Cash Prize" value={`RM ${prize_pool_rm.toLocaleString()}`} />
+              {additional_prizes?.length > 0 && (
+                <DetailRow label="Additional" value={additional_prizes.join(', ')} />
+              )}
             </dl>
 
             <h2 className="mb-4 mt-8 text-lg font-bold">Organiser</h2>
             <dl className="space-y-3 text-sm">
-              <DetailRow label="Name" value={tournament.organiser} />
-              <dt className="text-muted-foreground">Contact</dt>
-              <dd className="font-medium">
-                {wa ? (
-                  <a
-                    href={wa}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-green-700 hover:underline"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    {tournament.contact}
-                    <span className="text-xs text-muted-foreground">(WhatsApp)</span>
-                  </a>
-                ) : (
-                  <a href={`mailto:${tournament.contact}`} className="text-primary hover:underline">
-                    {tournament.contact}
-                  </a>
-                )}
-              </dd>
+              <DetailRow label="Name" value={organiser_name} />
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Contact</dt>
+                <dd className="text-right font-medium">
+                  {wa ? (
+                    <a href={wa} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-green-700 hover:underline">
+                      <MessageCircle className="h-4 w-4" />
+                      {organiser_contact}
+                      <span className="text-xs text-muted-foreground">(WhatsApp)</span>
+                    </a>
+                  ) : (
+                    <a href={`mailto:${organiser_contact}`} className="text-primary hover:underline">
+                      {organiser_contact}
+                    </a>
+                  )}
+                </dd>
+              </div>
             </dl>
           </section>
         </div>

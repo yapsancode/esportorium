@@ -9,10 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { AlertCircle, ShieldCheck } from 'lucide-react'
+import { apiFetch } from '@/lib/api'
 
-// Cloudflare Turnstile site key
-// Test key (always passes) — replace with your real key in production.
-// Get keys at: https://dash.cloudflare.com/?to=/:account/turnstile
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'
 
 const STATES = [
@@ -21,23 +19,75 @@ const STATES = [
   'Melaka', 'Perlis', 'Putrajaya', 'Labuan',
 ]
 
+const INITIAL = {
+  title: '',
+  format: '',
+  state: '',
+  venue: '',
+  start_date: '',
+  end_date: '',
+  registration_deadline: '',
+  prize_pool_rm: '',
+  max_teams: '',
+  additional_prizes: '',
+  registration_link: '',
+  organiser_name: '',
+  organiser_contact: '',
+  organiser_email: '',
+}
+
 export default function Submit() {
+  const [form, setForm] = useState(INITIAL)
   const [turnstileToken, setTurnstileToken] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  function handleSubmit(e) {
+  function set(field) {
+    return (e) => setForm(prev => ({ ...prev, [field]: e.target.value }))
+  }
+
+  function setSelect(field) {
+    return (value) => setForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault()
-    if (!turnstileToken) return
-    // TODO: POST to /api/tournaments/submit with form data + turnstile_token
-    setSubmitted(true)
+    if (!turnstileToken) {
+      setError('Please complete the bot verification.')
+      return
+    }
+    setError('')
+    setLoading(true)
+    try {
+      const payload = {
+        ...form,
+        prize_pool_rm: parseInt(form.prize_pool_rm, 10),
+        max_teams: parseInt(form.max_teams, 10),
+        additional_prizes: form.additional_prizes
+          ? form.additional_prizes.split(',').map(s => s.trim()).filter(Boolean)
+          : [],
+        state: form.state || null,
+        venue: form.venue || null,
+        turnstile_token: turnstileToken,
+      }
+      await apiFetch('/api/tournaments/submit', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
+      setSubmitted(true)
+    } catch (err) {
+      setError('Submission failed. Please check all fields and try again.')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (submitted) {
     return (
       <div className="min-h-screen bg-background">
-        <Helmet>
-          <title>Submitted — Esportorium</title>
-        </Helmet>
+        <Helmet><title>Submitted — Esportorium</title></Helmet>
         <Navbar />
         <main className="mx-auto max-w-lg px-4 py-20 text-center sm:px-6">
           <ShieldCheck className="mx-auto mb-4 h-12 w-12 text-green-600" />
@@ -55,11 +105,7 @@ export default function Submit() {
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>Submit a Tournament — Esportorium</title>
-        <meta name="description" content="List your Mobile Legends tournament on Esportorium. Free, no account needed. Fill in the form and our team will review your submission within 1–2 business days." />
-        <link rel="canonical" href="https://esportorium.com/submit" />
-        <meta property="og:url" content="https://esportorium.com/submit" />
-        <meta property="og:title" content="Submit a Tournament — Esportorium" />
-        <meta property="og:description" content="List your ML tournament on Esportorium. Free, no account needed." />
+        <meta name="description" content="List your Mobile Legends tournament on Esportorium. Free, no account needed." />
       </Helmet>
       <Navbar />
 
@@ -71,7 +117,6 @@ export default function Submit() {
           </p>
         </div>
 
-        {/* Disclaimer */}
         <div className="mb-6 flex gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
@@ -88,12 +133,13 @@ export default function Submit() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+
               <FormField label="Tournament Name" id="title">
-                <Input id="title" placeholder="e.g. ML Warriors Open 2025" maxLength={200} required />
+                <Input id="title" placeholder="e.g. ML Warriors Open 2025" maxLength={200} required value={form.title} onChange={set('title')} />
               </FormField>
 
               <FormField label="Format" id="format">
-                <Select required>
+                <Select required value={form.format} onValueChange={setSelect('format')}>
                   <SelectTrigger id="format">
                     <SelectValue placeholder="Select format" />
                   </SelectTrigger>
@@ -104,73 +150,72 @@ export default function Submit() {
                 </Select>
               </FormField>
 
-              <FormField label="State (offline only)" id="state">
-                <Select>
-                  <SelectTrigger id="state">
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATES.map((s) => (
-                      <SelectItem key={s} value={s.toLowerCase().replace(' ', '-')}>{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormField>
+              {form.format === 'offline' && (
+                <>
+                  <FormField label="State" id="state">
+                    <Select required value={form.state} onValueChange={setSelect('state')}>
+                      <SelectTrigger id="state">
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATES.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
 
-              <FormField label="Venue (offline only)" id="venue">
-                <Input id="venue" placeholder="e.g. Berjaya Times Square, KL" maxLength={300} />
-              </FormField>
+                  <FormField label="Venue" id="venue">
+                    <Input id="venue" placeholder="e.g. Berjaya Times Square, KL" maxLength={300} value={form.venue} onChange={set('venue')} />
+                  </FormField>
+                </>
+              )}
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField label="Start Date" id="start_date">
-                  <Input id="start_date" type="date" required />
+                  <Input id="start_date" type="date" required value={form.start_date} onChange={set('start_date')} />
                 </FormField>
                 <FormField label="End Date" id="end_date">
-                  <Input id="end_date" type="date" required />
+                  <Input id="end_date" type="date" required value={form.end_date} onChange={set('end_date')} />
                 </FormField>
               </div>
 
-              <FormField label="Registration Deadline" id="reg_deadline">
-                <Input id="reg_deadline" type="date" required />
+              <FormField label="Registration Deadline" id="registration_deadline">
+                <Input id="registration_deadline" type="date" required value={form.registration_deadline} onChange={set('registration_deadline')} />
               </FormField>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <FormField label="Prize Pool (RM)" id="prize_pool">
-                  <Input id="prize_pool" type="number" min={0} placeholder="e.g. 500" required />
+                <FormField label="Prize Pool (RM)" id="prize_pool_rm">
+                  <Input id="prize_pool_rm" type="number" min={0} placeholder="e.g. 500" required value={form.prize_pool_rm} onChange={set('prize_pool_rm')} />
                 </FormField>
                 <FormField label="Max Teams" id="max_teams">
-                  <Input id="max_teams" type="number" min={2} placeholder="e.g. 16" required />
+                  <Input id="max_teams" type="number" min={2} placeholder="e.g. 16" required value={form.max_teams} onChange={set('max_teams')} />
                 </FormField>
               </div>
 
               <FormField label="Additional Prizes (optional)" id="additional_prizes">
-                <Input id="additional_prizes" placeholder="e.g. Trophy, Jersey (comma separated)" />
+                <Input id="additional_prizes" placeholder="e.g. Trophy, Jersey (comma separated)" value={form.additional_prizes} onChange={set('additional_prizes')} />
               </FormField>
 
-              <FormField label="Registration Link" id="reg_link">
-                <Input id="reg_link" type="url" placeholder="https://forms.gle/..." required />
-              </FormField>
-
-              <FormField label="Banner Image (optional)" id="banner">
-                <Input id="banner" type="file" accept="image/png,image/jpeg,image/jpg" />
+              <FormField label="Registration Link" id="registration_link">
+                <Input id="registration_link" type="url" placeholder="https://forms.gle/..." required value={form.registration_link} onChange={set('registration_link')} />
               </FormField>
 
               <div className="border-t border-border pt-6">
                 <h3 className="mb-4 font-semibold">Organiser Info</h3>
                 <div className="space-y-4">
-                  <FormField label="Organiser Name" id="org_name">
-                    <Input id="org_name" placeholder="e.g. KL Esports Club" maxLength={100} required />
+                  <FormField label="Organiser Name" id="organiser_name">
+                    <Input id="organiser_name" placeholder="e.g. KL Esports Club" maxLength={100} required value={form.organiser_name} onChange={set('organiser_name')} />
                   </FormField>
-                  <FormField label="Contact (WhatsApp / email)" id="org_contact">
-                    <Input id="org_contact" placeholder="e.g. +6012-3456789" maxLength={100} required />
+                  <FormField label="Contact (WhatsApp / email)" id="organiser_contact">
+                    <Input id="organiser_contact" placeholder="e.g. +6012-3456789" maxLength={100} required value={form.organiser_contact} onChange={set('organiser_contact')} />
                   </FormField>
-                  <FormField label="Email (for approval notification)" id="org_email">
-                    <Input id="org_email" type="email" placeholder="organiser@example.com" required />
+                  <FormField label="Email (for approval notification)" id="organiser_email">
+                    <Input id="organiser_email" type="email" placeholder="organiser@example.com" required value={form.organiser_email} onChange={set('organiser_email')} />
                   </FormField>
                 </div>
               </div>
 
-              {/* Cloudflare Turnstile — bot protection */}
               <div>
                 <Turnstile
                   siteKey={TURNSTILE_SITE_KEY}
@@ -180,9 +225,17 @@ export default function Submit() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={!turnstileToken}>
-                Submit for Review
+              {error && (
+                <p className="flex items-center gap-2 text-sm text-red-500">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {error}
+                </p>
+              )}
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Submitting…' : 'Submit for Review'}
               </Button>
+
             </form>
           </CardContent>
         </Card>

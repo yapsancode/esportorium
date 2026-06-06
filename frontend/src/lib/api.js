@@ -8,3 +8,14 @@ export async function apiFetch(path, options = {}) {
   if (!res.ok) throw new Error(`API error ${res.status}`)
   return res.json()
 }
+
+export async function adminFetch(path, options = {}) {
+  const token = localStorage.getItem('admin_token')
+  return apiFetch(path, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...options.headers,
+    },
+  })
+}
