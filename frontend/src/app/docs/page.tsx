@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -39,6 +40,7 @@ export default function Documentation() {
   }, [])
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       <Navbar />
 
@@ -297,5 +299,7 @@ export default function Documentation() {
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   )
 }

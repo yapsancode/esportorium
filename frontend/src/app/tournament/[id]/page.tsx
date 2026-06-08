@@ -63,11 +63,13 @@ export async function generateMetadata(
       title: `${title} — Esportorium`,
       description,
       type: 'website',
-      ...(banner_image ? { images: [{ url: banner_image }] } : {}),
+      ...(banner_image ? { images: [{ url: banner_image, width: 1280, height: 720, alt: title }] } : {}),
     },
     twitter: {
+      card: banner_image ? 'summary_large_image' : 'summary',
       title: `${title} — Esportorium`,
       description,
+      ...(banner_image ? { images: [banner_image] } : {}),
     },
   }
 }
@@ -95,13 +97,43 @@ export default async function TournamentDetailPage(
     "eventAttendanceMode": format === 'online'
       ? "https://schema.org/OnlineEventAttendanceMode"
       : "https://schema.org/OfflineEventAttendanceMode",
+    ...(tournament.banner_image ? { "image": tournament.banner_image } : {}),
+    "location": format === 'online'
+      ? { "@type": "VirtualLocation", "url": tournament.registration_link }
+      : {
+          "@type": "Place",
+          "name": tournament.venue || tournament.state || "Malaysia",
+          "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "MY",
+            ...(tournament.state ? { "addressRegion": tournament.state } : {}),
+            ...(tournament.venue ? { "streetAddress": tournament.venue } : {}),
+          },
+        },
     "organizer": { "@type": "Organization", "name": tournament.organiser_name },
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "MYR", "url": canonicalUrl },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "MYR",
+      "url": tournament.registration_link,
+      "availability": "https://schema.org/InStock",
+      "validThrough": registration_deadline,
+    },
+  }
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://esportorium.com" },
+      { "@type": "ListItem", "position": 2, "name": title, "item": canonicalUrl },
+    ],
   }
 
   return (
     <div className="min-h-screen bg-background">
       <JsonLd schema={eventSchema} />
+      <JsonLd schema={breadcrumbSchema} />
       <Navbar />
       <TournamentDetailClient tournament={tournament} />
       <Footer />

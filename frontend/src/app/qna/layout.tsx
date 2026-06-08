@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'FAQ',
+  title: 'Frequently Asked Questions',
   description: 'Answers to common questions about submitting tournaments, how listings work, eligibility, and the Esportorium platform.',
   alternates: { canonical: '/qna' },
   openGraph: {

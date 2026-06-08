@@ -8,11 +8,14 @@ export const metadata: Metadata = {
     template: '%s — Esportorium',
   },
   description: 'Discover upcoming, live, and past Mobile Legends tournaments across Malaysia. Free to browse. Free to list.',
+  twitter: {
+    card: 'summary_large_image',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en-MY">
       <body>{children}</body>
     </html>
   )

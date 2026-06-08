@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     type: 'website',
   },
   twitter: {
+    card: 'summary_large_image',
     title: 'Esportorium — Malaysia Esports Tournaments',
     description: 'Discover upcoming, live, and past Mobile Legends tournaments across Malaysia.',
   },
@@ -27,12 +28,7 @@ const websiteSchema = {
   "name": "Esportorium",
   "url": "https://esportorium.com",
   "description": "Malaysia's curated esports tournament discovery platform for Mobile Legends.",
-  "inLanguage": ["en-MY", "ms-MY"],
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": "https://esportorium.com/?q={search_term_string}",
-    "query-input": "required name=search_term_string",
-  },
+  "inLanguage": "en-MY",
 }
 
 async function getTournaments() {
@@ -51,9 +47,25 @@ async function getTournaments() {
 export default async function HomePage() {
   const tournaments = await getTournaments()
 
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Malaysian Esports Tournaments",
+    "description": "Curated list of Mobile Legends tournaments in Malaysia.",
+    "url": "https://esportorium.com",
+    "numberOfItems": tournaments.length,
+    "itemListElement": tournaments.slice(0, 20).map((t: { id: string; title: string }, i: number) => ({
+      "@type": "ListItem",
+      "position": i + 1,
+      "url": `https://esportorium.com/tournament/${t.id}`,
+      "name": t.title,
+    })),
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <JsonLd schema={websiteSchema} />
+      <JsonLd schema={itemListSchema} />
       <Navbar />
       <TournamentList initialTournaments={tournaments} />
       <Footer />

@@ -31,11 +31,31 @@ const ORG_SCHEMA = {
   "@type": "Organization",
   "name": "Esportorium",
   "url": "https://esportorium.com",
-  "logo": "https://esportorium.com/android-chrome-512x512.png",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://esportorium.com/esportorium-logo.png",
+  },
   "description": "Malaysia's curated esports tournament discovery platform for Mobile Legends.",
   "email": "team.iidevstudio@gmail.com",
   "foundingDate": "2025",
-  "areaServed": "MY",
+  "areaServed": {
+    "@type": "Country",
+    "name": "Malaysia",
+    "sameAs": "https://www.wikidata.org/wiki/Q833",
+  },
+  "knowsAbout": [
+    "Mobile Legends: Bang Bang",
+    "Esports",
+    "Gaming Tournaments",
+    "Malaysia Esports",
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "email": "team.iidevstudio@gmail.com",
+    "contactType": "customer support",
+    "areaServed": "MY",
+    "availableLanguage": ["English", "Malay"],
+  },
   "sameAs": [],
 }
 
