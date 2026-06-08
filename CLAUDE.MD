@@ -13,7 +13,7 @@
 
 | Layer | Tech |
 |---|---|
-| Frontend | React + Vite + Tailwind CSS + shadcn/ui |
+| Frontend | Next.js 16 (App Router) + TypeScript + Tailwind CSS + shadcn/ui |
 | Backend | FastAPI (Python) |
 | Database | PostgreSQL (Supabase for prod, local for dev) |
 | File Storage | Cloudflare R2 (tournament banner images) |
@@ -26,17 +26,24 @@
 
 ```
 esportorium/
-├── frontend/                  # React + Vite app
+├── frontend/                  # Next.js 16 App Router app (TypeScript)
 │   ├── src/
-│   │   ├── components/        # Reusable UI components
-│   │   │   └── ui/            # shadcn/ui components
-│   │   ├── pages/             # Page-level components
+│   │   ├── app/               # Next.js App Router pages & layouts
+│   │   │   ├── layout.tsx     # Root layout
+│   │   │   ├── page.tsx       # Home (SSR, revalidates every 60s)
+│   │   │   ├── tournament/[id]/page.tsx   # Tournament detail (dynamic SSR)
+│   │   │   ├── submit/        # Submit form page
+│   │   │   ├── docs/          # Documentation page
+│   │   │   ├── qna/           # Q&A page
+│   │   │   ├── about/         # About page (pure Server Component)
+│   │   │   └── admin/         # Admin pages (protected, client-side)
+│   │   ├── components/        # Reusable UI components (TypeScript)
+│   │   │   └── ui/            # shadcn/ui components (TypeScript)
 │   │   ├── lib/               # Utilities, API calls, helpers
-│   │   ├── hooks/             # Custom React hooks
-│   │   └── assets/            # Static assets (logo, icons)
-│   ├── public/
-│   ├── tailwind.config.js
-│   └── vite.config.js
+│   │   └── assets/            # Static assets (images)
+│   ├── public/                # Static files served at root URL
+│   ├── next.config.ts
+│   └── tailwind.config.ts
 │
 ├── backend/                   # FastAPI app
 │   ├── app/
