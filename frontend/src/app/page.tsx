@@ -36,7 +36,7 @@ const websiteSchema = {
 async function getTournaments(): Promise<Tournament[] | null> {
   try {
     return await serverFetch<Tournament[]>('/api/tournaments', {
-      next: { revalidate: 60 },
+      cache: 'no-store',   // always fetch fresh — never serve stale approved/rejected state
     })
   } catch (err) {
     console.error('[HomePage] getTournaments failed:', err)
