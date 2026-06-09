@@ -17,8 +17,8 @@
 | Backend | FastAPI (Python) |
 | Database | PostgreSQL (Supabase for prod, local for dev) |
 | File Storage | Cloudflare R2 (tournament banner images) |
-| Frontend Hosting | Cloudflare Pages |
-| Backend Hosting | Railway or Render |
+| Frontend Hosting | Vercel |
+| Backend Hosting | Google Cloud Run (Docker) |
 
 ---
 
