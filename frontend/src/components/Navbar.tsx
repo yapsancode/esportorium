@@ -109,8 +109,9 @@ export default function Navbar() {
                 {NAV_LINKS.map(({ to, label }) => (
                   <MobileLink key={to} href={to} label={label} onClick={close} active={pathname === to} />
                 ))}
-                <div className="border-t border-border pt-2">
+                <div className="border-t border-border pt-2 space-y-1">
                   <MobileLink href="/submit" label="Submit Tournament" onClick={close} primary />
+                  <MobileLink href="/admin/login" label="Admin" onClick={close} />
                 </div>
               </>
             )}
