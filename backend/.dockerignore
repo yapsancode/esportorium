@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environment — never copy into image
+venv/
+env/
+.venv/
+
+# Secrets — never bake into image
+.env
+.env.*
+
+# Logs & temp
+*.log
+*.tmp
+
+# Git
+.git/
+.gitignore
+
+# Railway artefact (not needed in container)
+Procfile
