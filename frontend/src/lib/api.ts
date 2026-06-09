@@ -2,8 +2,11 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...((options.headers as Record<string, string>) ?? {}) },
     ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...((options.headers as Record<string, string>) ?? {}),
+    },
   })
   if (!res.ok) throw new Error(`API error ${res.status}`)
   return res.json()
