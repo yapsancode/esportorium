@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import type { Tournament } from '@/lib/types'
 import Preloader from '@/components/ui/preloader'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -31,21 +32,9 @@ function formatDateRange(start: string, end: string) {
   return `${fmt(start)} – ${fmt(end)}`
 }
 
-interface Tournament {
-  id: string
-  title: string
-  status: string
-  format: string
-  state: string | null
-  organiser_name: string
-  prize_pool_rm: number
-  start_date: string
-  end_date: string
-  banner_image: string | null
-}
-
 interface Props {
-  initialTournaments: Tournament[]
+  // null = fetch failed; [] = API returned empty list
+  initialTournaments: Tournament[] | null
 }
 
 export default function TournamentList({ initialTournaments }: Props) {
@@ -69,7 +58,7 @@ export default function TournamentList({ initialTournaments }: Props) {
     if (val === 'online') setStateFilter('')
   }
 
-  const filtered = initialTournaments.filter((t) => {
+  const filtered = (initialTournaments ?? []).filter((t) => {
     if (statusFilter !== 'all' && t.status !== statusFilter) return false
     if (formatFilter !== 'all' && t.format !== formatFilter) return false
     if (stateFilter && formatFilter !== 'online') {
@@ -168,7 +157,14 @@ export default function TournamentList({ initialTournaments }: Props) {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {initialTournaments === null ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="text-lg font-semibold text-foreground">Could not load tournaments</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              There was a problem reaching the server. Please try refreshing the page.
+            </p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="text-lg font-semibold text-foreground">No tournaments found</p>
             <p className="mt-1 text-sm text-muted-foreground">Try adjusting your filters.</p>

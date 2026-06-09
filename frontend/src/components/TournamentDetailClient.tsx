@@ -2,29 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import type { Tournament } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Share2, ExternalLink, ChevronDown, ChevronUp, CalendarPlus, MessageCircle, Check, ArrowLeft } from 'lucide-react'
-
-interface Tournament {
-  id: string
-  title: string
-  status: string
-  format: string
-  state: string | null
-  venue: string | null
-  start_date: string
-  end_date: string
-  registration_deadline: string
-  prize_pool_rm: number
-  additional_prizes: string[]
-  max_teams: number
-  organiser_name: string
-  organiser_contact: string
-  registration_link: string
-  banner_image: string | null
-}
 
 function formatDate(d: string) {
   return new Date(d + 'T00:00:00').toLocaleDateString('en-MY', {

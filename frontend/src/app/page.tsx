@@ -3,6 +3,8 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import TournamentList from '@/components/TournamentList'
 import JsonLd from '@/components/JsonLd'
+import { serverFetch } from '@/lib/api'
+import type { Tournament } from '@/lib/types'
 
 export const metadata: Metadata = {
   title: 'Malaysia Esports Tournaments',
@@ -31,18 +33,17 @@ const websiteSchema = {
   "inLanguage": "en-MY",
 }
 
-async function getTournaments() {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+async function getTournaments(): Promise<Tournament[] | null> {
   try {
-    const res = await fetch(`${base}/api/tournaments`, {
+    return await serverFetch<Tournament[]>('/api/tournaments', {
       next: { revalidate: 60 },
     })
-    if (!res.ok) return []
-    return res.json()
-  } catch {
-    return []
+  } catch (err) {
+    console.error('[HomePage] getTournaments failed:', err)
+    return null   // null = fetch error; [] = genuinely empty
   }
 }
+
 
 export default async function HomePage() {
   const tournaments = await getTournaments()
@@ -53,8 +54,8 @@ export default async function HomePage() {
     "name": "Malaysian Esports Tournaments",
     "description": "Curated list of Mobile Legends tournaments in Malaysia.",
     "url": "https://esportorium.com",
-    "numberOfItems": tournaments.length,
-    "itemListElement": tournaments.slice(0, 20).map((t: { id: string; title: string }, i: number) => ({
+    "numberOfItems": tournaments?.length ?? 0,
+    "itemListElement": (tournaments ?? []).slice(0, 20).map((t, i) => ({
       "@type": "ListItem",
       "position": i + 1,
       "url": `https://esportorium.com/tournament/${t.id}`,

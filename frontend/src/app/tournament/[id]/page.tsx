@@ -4,35 +4,17 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import JsonLd from '@/components/JsonLd'
 import TournamentDetailClient from '@/components/TournamentDetailClient'
+import { serverFetch } from '@/lib/api'
+import type { Tournament } from '@/lib/types'
 
-interface Tournament {
-  id: string
-  title: string
-  status: string
-  format: string
-  state: string | null
-  venue: string | null
-  start_date: string
-  end_date: string
-  registration_deadline: string
-  prize_pool_rm: number
-  additional_prizes: string[]
-  max_teams: number
-  organiser_name: string
-  organiser_contact: string
-  registration_link: string
-  banner_image: string | null
-}
 
 async function getTournament(id: string): Promise<Tournament | null> {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
   try {
-    const res = await fetch(`${base}/api/tournaments/${id}`, {
+    return await serverFetch<Tournament>(`/api/tournaments/${id}`, {
       next: { revalidate: 60 },
     })
-    if (!res.ok) return null
-    return res.json()
-  } catch {
+  } catch (err) {
+    console.error(`[TournamentDetailPage] getTournament(${id}) failed:`, err)
     return null
   }
 }

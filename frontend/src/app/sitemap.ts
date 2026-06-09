@@ -1,14 +1,15 @@
 import type { MetadataRoute } from 'next'
+import { serverFetch } from '@/lib/api'
 
 export const revalidate = 3600
 
 async function getTournaments() {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
   try {
-    const res = await fetch(`${base}/api/tournaments`)
-    if (!res.ok) return []
-    return res.json()
-  } catch {
+    return await serverFetch<{ id: string; updated_at?: string; created_at?: string }[]>(
+      '/api/tournaments'
+    )
+  } catch (err) {
+    console.error('[sitemap] getTournaments failed:', err)
     return []
   }
 }
@@ -24,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: 'https://esportorium.com/about',   lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
   ]
 
-  const tournamentRoutes: MetadataRoute.Sitemap = tournaments.map((t: { id: string; updated_at?: string; created_at?: string }) => ({
+  const tournamentRoutes: MetadataRoute.Sitemap = tournaments.map((t) => ({
     url: `https://esportorium.com/tournament/${t.id}`,
     lastModified: t.updated_at
       ? new Date(t.updated_at)
