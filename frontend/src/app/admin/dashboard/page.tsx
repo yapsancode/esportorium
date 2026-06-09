@@ -94,39 +94,41 @@ function AdminDashboardContent() {
             ) : submissions.length === 0 ? (
               <p className="px-6 py-8 text-center text-muted-foreground">No pending submissions.</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tournament</TableHead>
-                    <TableHead>Organiser</TableHead>
-                    <TableHead>Format</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {submissions.map((sub) => (
-                    <TableRow key={sub.id}>
-                      <TableCell className="font-medium">{sub.title}</TableCell>
-                      <TableCell className="text-muted-foreground">{sub.organiser_name}</TableCell>
-                      <TableCell>{formatLabel(sub)}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(sub.created_at).toLocaleDateString('en-MY')}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button size="sm" className="h-8 gap-1.5" onClick={() => handleApprove(sub.id)}>
-                            <Check className="h-3.5 w-3.5" /> Approve
-                          </Button>
-                          <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => handleReject(sub.id)}>
-                            <X className="h-3.5 w-3.5" /> Reject
-                          </Button>
-                        </div>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tournament</TableHead>
+                      <TableHead>Organiser</TableHead>
+                      <TableHead>Format</TableHead>
+                      <TableHead>Submitted</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {submissions.map((sub) => (
+                      <TableRow key={sub.id}>
+                        <TableCell className="font-medium">{sub.title}</TableCell>
+                        <TableCell className="text-muted-foreground">{sub.organiser_name}</TableCell>
+                        <TableCell>{formatLabel(sub)}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(sub.created_at).toLocaleDateString('en-MY')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" className="h-8 gap-1.5" onClick={() => handleApprove(sub.id)}>
+                              <Check className="h-3.5 w-3.5" /> Approve
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={() => handleReject(sub.id)}>
+                              <X className="h-3.5 w-3.5" /> Reject
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>

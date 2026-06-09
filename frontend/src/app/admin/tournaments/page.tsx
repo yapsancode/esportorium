@@ -167,35 +167,37 @@ function AdminTournamentsContent() {
             ) : tournaments.length === 0 ? (
               <p className="px-6 py-8 text-center text-muted-foreground">No tournaments yet.</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tournament</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Approved</TableHead>
-                    <TableHead>Format</TableHead>
-                    <TableHead>Prize (RM)</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tournaments.map((t) => (
-                    <TableRow key={t.id}>
-                      <TableCell className="font-medium">{t.title}</TableCell>
-                      <TableCell><Badge variant={t.status as any}>{t.status.charAt(0).toUpperCase() + t.status.slice(1)}</Badge></TableCell>
-                      <TableCell>{t.is_approved ? <span className="text-green-600 font-medium">Yes</span> : <span className="text-muted-foreground">Pending</span>}</TableCell>
-                      <TableCell>{t.format === 'offline' && t.state ? `Offline · ${t.state}` : t.format.charAt(0).toUpperCase() + t.format.slice(1)}</TableCell>
-                      <TableCell>RM {t.prize_pool_rm.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(t)}><Pencil className="h-3.5 w-3.5" /></Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(t.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                        </div>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tournament</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Approved</TableHead>
+                      <TableHead>Format</TableHead>
+                      <TableHead>Prize (RM)</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {tournaments.map((t) => (
+                      <TableRow key={t.id}>
+                        <TableCell className="font-medium">{t.title}</TableCell>
+                        <TableCell><Badge variant={t.status as any}>{t.status.charAt(0).toUpperCase() + t.status.slice(1)}</Badge></TableCell>
+                        <TableCell>{t.is_approved ? <span className="text-green-600 font-medium">Yes</span> : <span className="text-muted-foreground">Pending</span>}</TableCell>
+                        <TableCell>{t.format === 'offline' && t.state ? `Offline · ${t.state}` : t.format.charAt(0).toUpperCase() + t.format.slice(1)}</TableCell>
+                        <TableCell>RM {t.prize_pool_rm.toLocaleString()}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(t)}><Pencil className="h-3.5 w-3.5" /></Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(t.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
