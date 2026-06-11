@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { apiFetch } from '@/lib/api'
+import { apiFetch, getValidAdminToken } from '@/lib/api'
 
 export default function AdminLogin() {
   const router = useRouter()
@@ -18,6 +18,11 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Already authenticated? Skip the form and go straight to the dashboard.
+  useEffect(() => {
+    if (getValidAdminToken()) router.replace('/admin/dashboard')
+  }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
