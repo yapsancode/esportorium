@@ -39,14 +39,15 @@ interface Props {
 }
 
 export default function TournamentList({ initialTournaments }: Props) {
-  const [showPreloader, setShowPreloader] = useState(false)
+  const [showPreloader, setShowPreloader] = useState(true)
 
   useEffect(() => {
     const alreadyShown = sessionStorage.getItem(PRELOADER_KEY)
-    if (!alreadyShown) {
-      sessionStorage.setItem(PRELOADER_KEY, 'true')
-      setShowPreloader(true)
+    if (alreadyShown) {
+      setShowPreloader(false)
+      return
     }
+    sessionStorage.setItem(PRELOADER_KEY, 'true')
   }, [])
 
   const [statusFilter, setStatusFilter] = useState('upcoming')
