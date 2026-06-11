@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
-import { adminFetch } from '@/lib/api'
+import { adminFetch, ApiError } from '@/lib/api'
 
 const STATES = [
   'Kuala Lumpur', 'Selangor', 'Johor', 'Penang', 'Sabah', 'Sarawak',
@@ -89,8 +89,8 @@ function AdminTournamentsContent() {
     try {
       const data = await adminFetch('/api/admin/tournaments')
       setTournaments(data)
-    } catch (err: any) {
-      if (err.message.includes('401')) {
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
         localStorage.removeItem('admin_token')
         router.push('/admin/login')
       } else {

@@ -1,6 +1,25 @@
 // Strip any accidental trailing slash so URLs never get a double-slash
 const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000').replace(/\/$/, '')
 
+// Thrown when the server responds with a non-2xx status. `status` is the HTTP code.
+export class ApiError extends Error {
+  status: number
+  constructor(status: number, message?: string) {
+    super(message ?? `API error ${status}`)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+// Thrown when the request never reached the server (DNS, offline, CORS, CSP,
+// connection refused). There is no HTTP status because no response came back.
+export class NetworkError extends Error {
+  constructor(message = 'Could not reach the server') {
+    super(message)
+    this.name = 'NetworkError'
+  }
+}
+
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
 // Returns the stored admin token only if it exists and its JWT `exp` is still in
@@ -27,14 +46,21 @@ export function getValidAdminToken(): string | null {
 // ── Client-side helpers ───────────────────────────────────────────────────────
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...((options.headers as Record<string, string>) ?? {}),
-    },
-  })
-  if (!res.ok) throw new Error(`API error ${res.status}`)
+  let res: Response
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...((options.headers as Record<string, string>) ?? {}),
+      },
+    })
+  } catch {
+    // fetch() rejects (instead of resolving) only when no response was received —
+    // network down, connection refused, CORS/CSP block, etc.
+    throw new NetworkError()
+  }
+  if (!res.ok) throw new ApiError(res.status)
   return res.json()
 }
 

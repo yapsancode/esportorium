@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Check, X } from 'lucide-react'
-import { adminFetch } from '@/lib/api'
+import { adminFetch, ApiError } from '@/lib/api'
 
 interface Submission {
   id: string
@@ -32,8 +32,8 @@ function AdminDashboardContent() {
     try {
       const data = await adminFetch('/api/admin/submissions')
       setSubmissions(data)
-    } catch (err: any) {
-      if (err.message.includes('401')) {
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
         localStorage.removeItem('admin_token')
         router.push('/admin/login')
       } else {

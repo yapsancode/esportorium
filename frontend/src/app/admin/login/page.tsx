@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { apiFetch, getValidAdminToken } from '@/lib/api'
+import { apiFetch, getValidAdminToken, ApiError, NetworkError } from '@/lib/api'
 
 export default function AdminLogin() {
   const router = useRouter()
@@ -35,8 +35,14 @@ export default function AdminLogin() {
       })
       localStorage.setItem('admin_token', data.access_token)
       router.push('/admin/dashboard')
-    } catch {
-      setError('Invalid username or password.')
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setError('Invalid username or password.')
+      } else if (err instanceof NetworkError) {
+        setError("Can't reach the server. Check your connection and try again.")
+      } else {
+        setError('Something went wrong. Please try again.')
+      }
       setLoading(false)
     }
   }
