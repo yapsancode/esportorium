@@ -49,7 +49,7 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Plus Jakarta Sans", "sans-serif"],
+        sans: ["var(--font-jakarta)", "sans-serif"],
       },
     },
   },

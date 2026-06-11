@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -34,7 +35,7 @@ export default function Navbar() {
 
           {/* Logo — always visible */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0" onClick={close}>
-            <img src="/esportorium-logo.png" alt="Esportorium" className="h-8 w-8 rounded-md" />
+            <Image src="/esportorium-logo.png" alt="Esportorium" width={32} height={32} className="h-8 w-8 rounded-md" />
             <span className="text-xl font-extrabold tracking-tight text-foreground">
               Esportorium
             </span>

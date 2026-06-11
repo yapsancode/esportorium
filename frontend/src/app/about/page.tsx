@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import JsonLd from '@/components/JsonLd'
@@ -68,7 +69,7 @@ export default function About() {
       <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
 
         <div className="mb-10 flex flex-col items-center text-center">
-          <img src="/esportorium-logo.png" alt="Esportorium" className="mb-5 h-20 w-20 rounded-2xl shadow-md" />
+          <Image src="/esportorium-logo.png" alt="Esportorium" width={80} height={80} className="mb-5 h-20 w-20 rounded-2xl shadow-md" />
           <div className="mb-2 flex items-center gap-2">
             <Info className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-primary">About</span>

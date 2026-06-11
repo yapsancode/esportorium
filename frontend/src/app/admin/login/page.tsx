@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowLeft } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -42,7 +43,7 @@ export default function AdminLogin() {
       </Link>
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center items-center">
-          <img src="/esportorium-logo.png" alt="Esportorium" className="mb-2 h-12 w-12 rounded-lg" />
+          <Image src="/esportorium-logo.png" alt="Esportorium" width={48} height={48} className="mb-2 h-12 w-12 rounded-lg" />
           <CardTitle className="text-2xl font-extrabold">Esportorium</CardTitle>
           <CardDescription>Admin access only</CardDescription>
         </CardHeader>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Tournament } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -143,8 +144,14 @@ export default function TournamentDetailClient({ tournament }: { tournament: Tou
             Banner {bannerExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
           {bannerExpanded && (
-            <div className="aspect-video w-full overflow-hidden rounded-lg bg-muted">
-              <img src={banner_image} alt={`${title} banner`} className="h-full w-full object-cover" />
+            <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-muted">
+              <Image
+                src={banner_image}
+                alt={`${title} banner`}
+                fill
+                sizes="(max-width: 768px) 100vw, 768px"
+                className="object-cover"
+              />
             </div>
           )}
         </div>

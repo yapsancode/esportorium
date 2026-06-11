@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Tournament } from '@/lib/types'
 import Preloader from '@/components/ui/preloader'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -194,8 +195,8 @@ function TournamentCard({ tournament, viewMode }: { tournament: Tournament; view
       <Link href={`/tournament/${id}`}>
         <Card className="overflow-hidden transition-shadow hover:shadow-md cursor-pointer">
           <div className="flex items-center gap-4 p-4">
-            <div className="h-16 w-24 shrink-0 rounded-md bg-muted overflow-hidden">
-              {banner_image && <img src={banner_image} alt={title} className="h-full w-full object-cover" />}
+            <div className="relative h-16 w-24 shrink-0 rounded-md bg-muted overflow-hidden">
+              {banner_image && <Image src={banner_image} alt={title} fill sizes="96px" className="object-cover" />}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
@@ -221,8 +222,8 @@ function TournamentCard({ tournament, viewMode }: { tournament: Tournament; view
   return (
     <Link href={`/tournament/${id}`}>
       <Card className="overflow-hidden transition-shadow hover:shadow-md cursor-pointer">
-        <div className="aspect-video w-full bg-muted overflow-hidden">
-          {banner_image && <img src={banner_image} alt={title} className="h-full w-full object-cover" />}
+        <div className="relative aspect-video w-full bg-muted overflow-hidden">
+          {banner_image && <Image src={banner_image} alt={title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" />}
         </div>
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
