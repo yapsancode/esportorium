@@ -1,9 +1,11 @@
 """
-Notification helpers — Discord webhook and (later) Resend email.
+Notification helpers — Discord webhooks.
 
-Environment variables required:
-  DISCORD_WEBHOOK_URL   — private Discord channel webhook URL
-                          Leave blank to disable (no webhook is sent).
+Environment variables:
+  DISCORD_WEBHOOK_URL         — private admin channel (new submissions, rejections)
+  DISCORD_PUBLIC_WEBHOOK_URL  — public community channel (tournament approvals)
+
+Leave either blank to skip that notification.
 """
 import logging
 import os
@@ -11,36 +13,102 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+_TERRACOTTA = 11874858   # #B5522A in decimal
+_GREEN       = 3066993   # #2ECC71
+_RED         = 15158332  # #E74C3C
 
-async def notify_discord_new_submission(title: str, organiser: str, format_: str, state: str | None) -> None:
-    """Fire-and-forget: post a message to the Discord webhook when a new
-    tournament submission arrives.  Silently skips if the env var is unset."""
-    url = os.getenv("DISCORD_WEBHOOK_URL", "").strip()
-    if not url:
-        return
 
-    location = f"{state}" if state else "Online"
-    payload = {
-        "username": "Esportorium Bot",
-        "embeds": [
-            {
-                "title": "🎮 New Tournament Submission",
-                "color": 11874858,   # terracotta #B5522A in decimal
-                "fields": [
-                    {"name": "Title",      "value": title,      "inline": True},
-                    {"name": "Organiser",  "value": organiser,  "inline": True},
-                    {"name": "Format",     "value": format_.capitalize(), "inline": True},
-                    {"name": "Location",   "value": location,   "inline": True},
-                ],
-                "footer": {"text": "Review at esportorium.com/admin/dashboard"},
-            }
-        ],
-    }
-
+async def _post(url: str, payload: dict) -> None:
     try:
         async with httpx.AsyncClient(timeout=5) as client:
             resp = await client.post(url, json=payload)
             resp.raise_for_status()
     except Exception as exc:
-        # Never let a notification failure block the submission response
         logger.warning("Discord webhook failed: %s", exc)
+
+
+async def notify_discord_new_submission(
+    title: str, organiser: str, format_: str, state: str | None
+) -> None:
+    """Notify admin channel when a new tournament submission arrives."""
+    url = os.getenv("DISCORD_WEBHOOK_URL", "").strip()
+    if not url:
+        return
+
+    location = state if state else "Online"
+    await _post(url, {
+        "username": "Esportorium Bot",
+        "embeds": [{
+            "title": "🎮 New Tournament Submission",
+            "color": _TERRACOTTA,
+            "fields": [
+                {"name": "Title",     "value": title,                   "inline": True},
+                {"name": "Organiser", "value": organiser,               "inline": True},
+                {"name": "Format",    "value": format_.capitalize(),    "inline": True},
+                {"name": "Location",  "value": location,                "inline": True},
+            ],
+            "footer": {"text": "Review at esportorium.com/admin/dashboard"},
+        }],
+    })
+
+
+async def notify_discord_tournament_approved(
+    tournament_id: str,
+    title: str,
+    organiser: str,
+    format_: str,
+    state: str | None,
+    prize_pool_rm: int,
+    start_date: str,
+    registration_link: str,
+    banner_image: str | None,
+) -> None:
+    """Announce an approved tournament to the public community channel.
+    Falls back to the admin webhook if no public webhook is configured."""
+    public_url  = os.getenv("DISCORD_PUBLIC_WEBHOOK_URL", "").strip()
+    admin_url   = os.getenv("DISCORD_WEBHOOK_URL", "").strip()
+    url = public_url or admin_url
+    if not url:
+        return
+
+    location = state if state else "Online"
+    tournament_url = f"https://esportorium.com/tournament/{tournament_id}"
+
+    embed: dict = {
+        "title": f"✅ {title}",
+        "url": tournament_url,
+        "color": _GREEN,
+        "description": f"A new **Mobile Legends** tournament has been listed on Esportorium!",
+        "fields": [
+            {"name": "Organiser",  "value": organiser,              "inline": True},
+            {"name": "Format",     "value": f"{format_.capitalize()} · {location}", "inline": True},
+            {"name": "Prize Pool", "value": f"RM {prize_pool_rm:,}", "inline": True},
+            {"name": "Starts",     "value": start_date,             "inline": True},
+            {"name": "Register",   "value": registration_link,      "inline": False},
+        ],
+        "footer": {"text": "esportorium.com — Malaysia Esports Tournaments"},
+    }
+    if banner_image:
+        embed["image"] = {"url": banner_image}
+
+    await _post(url, {"username": "Esportorium Bot", "embeds": [embed]})
+
+
+async def notify_discord_tournament_rejected(title: str, organiser: str) -> None:
+    """Notify admin channel when a submission is rejected."""
+    url = os.getenv("DISCORD_WEBHOOK_URL", "").strip()
+    if not url:
+        return
+
+    await _post(url, {
+        "username": "Esportorium Bot",
+        "embeds": [{
+            "title": "❌ Submission Rejected",
+            "color": _RED,
+            "fields": [
+                {"name": "Title",     "value": title,     "inline": True},
+                {"name": "Organiser", "value": organiser, "inline": True},
+            ],
+            "footer": {"text": "Submission removed from the queue."},
+        }],
+    })

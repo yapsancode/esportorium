@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 import bcrypt as _bcrypt
@@ -9,6 +9,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.tournament import Tournament
 from app.schemas.tournament import TournamentOut, TournamentCreate, TournamentUpdate, AuthLogin, TokenOut
+from app.services.notifications import (
+    notify_discord_tournament_approved,
+    notify_discord_tournament_rejected,
+)
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -86,25 +90,40 @@ def admin_update_tournament(tournament_id: UUID, data: TournamentUpdate, db: Ses
 
 
 @router.patch("/tournaments/{tournament_id}/approve", response_model=TournamentOut, dependencies=[Depends(get_current_admin)])
-def admin_approve(tournament_id: UUID, db: Session = Depends(get_db)):
-    """Approve a pending submission."""
+def admin_approve(tournament_id: UUID, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    """Approve a pending submission and announce it on Discord."""
     tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
     if not tournament:
         raise HTTPException(status_code=404, detail="Tournament not found")
     tournament.is_approved = True
     db.commit()
     db.refresh(tournament)
+    background_tasks.add_task(
+        notify_discord_tournament_approved,
+        tournament_id=str(tournament.id),
+        title=tournament.title,
+        organiser=tournament.organiser_name,
+        format_=tournament.format,
+        state=tournament.state,
+        prize_pool_rm=tournament.prize_pool_rm,
+        start_date=str(tournament.start_date),
+        registration_link=tournament.registration_link,
+        banner_image=tournament.banner_image,
+    )
     return tournament
 
 
 @router.patch("/tournaments/{tournament_id}/reject", dependencies=[Depends(get_current_admin)])
-def admin_reject(tournament_id: UUID, db: Session = Depends(get_db)):
-    """Reject and delete a pending submission."""
+def admin_reject(tournament_id: UUID, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    """Reject and delete a pending submission, notify admin on Discord."""
     tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
     if not tournament:
         raise HTTPException(status_code=404, detail="Tournament not found")
+    title = tournament.title
+    organiser = tournament.organiser_name
     db.delete(tournament)
     db.commit()
+    background_tasks.add_task(notify_discord_tournament_rejected, title=title, organiser=organiser)
     return {"detail": "Submission rejected and removed"}
 
 
