@@ -1,9 +1,9 @@
 import type { NextConfig } from 'next'
 
-// Content Security Policy — shipped as **Report-Only** for now so it never blocks
-// a legitimate resource. Watch the browser console / report endpoint, then once
-// it's clean, rename the header to `Content-Security-Policy` to enforce it.
-const cspReportOnly = [
+// Content Security Policy — enforced. Verified clean in an incognito window
+// (no violations from first-party scripts, R2 images, fonts, API, or Turnstile).
+// If you add a new third-party origin, allow it in the relevant directive below.
+const csp = [
   "default-src 'self'",
   // 'unsafe-inline'/'unsafe-eval' are needed by Next.js' runtime + hydration.
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://va.vercel-scripts.com",
@@ -34,7 +34,7 @@ const securityHeaders = [
     key: 'Permissions-Policy',
     value: 'camera=(), microphone=(), geolocation=()',
   },
-  { key: 'Content-Security-Policy-Report-Only', value: cspReportOnly },
+  { key: 'Content-Security-Policy', value: csp },
 ]
 
 const nextConfig: NextConfig = {
