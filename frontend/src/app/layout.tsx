@@ -1,27 +1,36 @@
-import type { Metadata, Viewport } from 'next'
-import './globals.css'
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 
 export const viewport: Viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
-}
+};
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://esportorium.com'),
+  metadataBase: new URL("https://esportorium.com"),
   title: {
-    default: 'Esportorium — Malaysia Esports Tournaments',
-    template: '%s — Esportorium',
+    default: "Esportorium — Malaysia Esports Tournaments",
+    template: "%s — Esportorium",
   },
-  description: 'Discover upcoming, live, and past Mobile Legends tournaments across Malaysia. Free to browse. Free to list.',
+  description:
+    "Discover upcoming, live, and past Mobile Legends tournaments across Malaysia. Free to browse. Free to list.",
   twitter: {
-    card: 'summary_large_image',
+    card: "summary_large_image",
   },
-}
+};
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en-MY">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
-  )
+  );
 }
