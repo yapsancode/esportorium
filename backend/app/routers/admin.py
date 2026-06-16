@@ -1,12 +1,13 @@
 import os
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 import bcrypt as _bcrypt
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.limiter import limiter
 from app.models.tournament import Tournament
 from app.schemas.tournament import TournamentAdminOut, TournamentCreate, TournamentUpdate, AuthLogin, TokenOut
 from app.services.notifications import (
@@ -44,8 +45,9 @@ def get_current_admin(token: str = Depends(oauth2_scheme)):
 # --- Auth ---
 
 @router.post("/auth/login", response_model=TokenOut)
-def admin_login(data: AuthLogin):
-    """Authenticate admin and return a JWT."""
+@limiter.limit("5/minute")
+def admin_login(request: Request, data: AuthLogin):
+    """Authenticate admin and return a JWT. Rate-limited to slow brute-force attempts."""
     admin_username = os.getenv("ADMIN_USERNAME")
     admin_hash = os.getenv("ADMIN_PASSWORD_HASH")
     if data.username != admin_username or not _verify_password(data.password, admin_hash):
