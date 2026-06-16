@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.limiter import limiter
 from app.models.tournament import Tournament
-from app.schemas.tournament import TournamentAdminOut, TournamentCreate, TournamentUpdate, AuthLogin, TokenOut
+from app.schemas.tournament import TournamentAdminOut, TournamentCreate, TournamentUpdate, AuthLogin, TokenOut, MessageOut
 from app.services.notifications import (
     notify_discord_tournament_approved,
     notify_discord_tournament_rejected,
@@ -117,7 +117,7 @@ def admin_approve(tournament_id: UUID, background_tasks: BackgroundTasks, db: Se
     return tournament
 
 
-@router.patch("/tournaments/{tournament_id}/reject", dependencies=[Depends(get_current_admin)])
+@router.patch("/tournaments/{tournament_id}/reject", response_model=MessageOut, dependencies=[Depends(get_current_admin)])
 def admin_reject(tournament_id: UUID, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Reject and delete a pending submission, notify admin on Discord."""
     tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
@@ -131,7 +131,7 @@ def admin_reject(tournament_id: UUID, background_tasks: BackgroundTasks, db: Ses
     return {"detail": "Submission rejected and removed"}
 
 
-@router.delete("/tournaments/{tournament_id}", dependencies=[Depends(get_current_admin)])
+@router.delete("/tournaments/{tournament_id}", response_model=MessageOut, dependencies=[Depends(get_current_admin)])
 def admin_delete_tournament(tournament_id: UUID, db: Session = Depends(get_db)):
     """Delete a tournament."""
     tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()

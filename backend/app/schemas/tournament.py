@@ -123,6 +123,11 @@ class TournamentAdminOut(TournamentOut):
 
 # ─── Auth schemas ─────────────────────────────────────────────────────────────
 
+class MessageOut(BaseModel):
+    """Simple {"detail": "..."} response for actions with no body to return."""
+    detail: str
+
+
 class AuthLogin(BaseModel):
     username: str
     password: str
