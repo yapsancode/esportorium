@@ -19,7 +19,6 @@ class TournamentBase(BaseModel):
     max_teams:             int = Field(..., ge=2, le=10_000)
     organiser_name:        str = Field(..., min_length=2, max_length=100, strip_whitespace=True)
     organiser_contact:     str = Field(..., min_length=5, max_length=100, strip_whitespace=True)
-    organiser_email:       EmailStr
     registration_link:     str = Field(..., min_length=10, max_length=500)
     banner_image:          Optional[str] = Field(default=None, max_length=500)
 
@@ -65,6 +64,7 @@ class TournamentBase(BaseModel):
 
 class TournamentSubmit(TournamentBase):
     """Used by the public submit endpoint — creates an unapproved record."""
+    organiser_email: EmailStr   # internal notification address; never exposed in public responses
     turnstile_token: str = Field(..., min_length=1, description="Cloudflare Turnstile response token")
 
     @model_validator(mode="after")
@@ -79,6 +79,7 @@ class TournamentSubmit(TournamentBase):
 
 class TournamentCreate(TournamentBase):
     """Used by admin to manually create a tournament — no Turnstile, no future-date restriction."""
+    organiser_email: EmailStr
     is_approved: bool = True
 
 
@@ -104,6 +105,7 @@ class TournamentUpdate(BaseModel):
 # ─── Response schema ──────────────────────────────────────────────────────────
 
 class TournamentOut(TournamentBase):
+    """Public response — deliberately omits organiser_email (internal PII)."""
     id:         UUID
     game:       str
     is_approved: bool
@@ -112,6 +114,11 @@ class TournamentOut(TournamentBase):
     updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+
+class TournamentAdminOut(TournamentOut):
+    """Admin response — includes the organiser's notification email."""
+    organiser_email: EmailStr
 
 
 # ─── Auth schemas ─────────────────────────────────────────────────────────────
