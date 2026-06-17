@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { AlertCircle, ShieldCheck } from 'lucide-react'
-import { apiFetch } from '@/lib/api'
+import { apiFetch, uploadBanner } from '@/lib/api'
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'
 
@@ -35,6 +35,7 @@ const INITIAL = {
   organiser_name: '',
   organiser_contact: '',
   organiser_email: '',
+  banner_image: '',
 }
 
 export default function Submit() {
@@ -43,10 +44,35 @@ export default function Submit() {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [bannerUploading, setBannerUploading] = useState(false)
+  const [bannerError, setBannerError] = useState('')
 
   function set(field: string) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm(prev => ({ ...prev, [field]: e.target.value }))
+  }
+
+  async function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setBannerError('')
+    if (!file.type.startsWith('image/')) {
+      setBannerError('Please choose an image file.')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setBannerError('Image must be 2 MB or smaller.')
+      return
+    }
+    setBannerUploading(true)
+    try {
+      const url = await uploadBanner(file)
+      setForm(prev => ({ ...prev, banner_image: url }))
+    } catch {
+      setBannerError('Upload failed. Please try again.')
+    } finally {
+      setBannerUploading(false)
+    }
   }
 
   function setSelect(field: string) {
@@ -86,6 +112,7 @@ export default function Submit() {
           : [],
         state: form.state || null,
         venue: form.venue || null,
+        banner_image: form.banner_image || null,
         turnstile_token: turnstileToken,
       }
       await apiFetch('/api/tournaments/submit', {
@@ -211,6 +238,31 @@ export default function Submit() {
 
               <FormField label="Registration Link" id="registration_link">
                 <Input id="registration_link" type="url" placeholder="https://forms.gle/..." required value={form.registration_link} onChange={set('registration_link')} />
+              </FormField>
+
+              <FormField label="Banner Image (optional)" id="banner_image">
+                {form.banner_image ? (
+                  <div className="space-y-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={form.banner_image} alt="Banner preview" className="h-36 w-full rounded-md border border-border object-cover" />
+                    <Button type="button" variant="outline" size="sm" onClick={() => setForm(prev => ({ ...prev, banner_image: '' }))}>
+                      Remove image
+                    </Button>
+                  </div>
+                ) : (
+                  <Input
+                    id="banner_image"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    disabled={bannerUploading}
+                    onChange={handleBannerUpload}
+                  />
+                )}
+                {bannerUploading && <p className="mt-1 text-xs text-muted-foreground">Uploading…</p>}
+                {bannerError && <p className="mt-1 text-xs text-red-500">{bannerError}</p>}
+                {!form.banner_image && !bannerError && (
+                  <p className="mt-1 text-xs text-muted-foreground">Landscape 16:9 recommended. JPG, PNG, WebP or GIF, max 2 MB.</p>
+                )}
               </FormField>
 
               <div className="border-t border-border pt-6">

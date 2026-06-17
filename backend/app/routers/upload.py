@@ -2,8 +2,8 @@ import io
 import os
 import uuid
 import boto3
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
-from app.routers.admin import get_current_admin
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request
+from app.limiter import limiter
 
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024  # 2 MB
 
@@ -37,9 +37,14 @@ def get_r2_client():
     )
 
 
-@router.post("/banner", dependencies=[Depends(get_current_admin)])
-async def upload_banner(file: UploadFile = File(...)):
-    """Upload a tournament banner to Cloudflare R2 and return the public URL."""
+@router.post("/banner")
+@limiter.limit("20/hour")
+async def upload_banner(request: Request, file: UploadFile = File(...)):
+    """Upload a tournament banner to Cloudflare R2 and return the public URL.
+
+    Public (organisers use it from the submit form) but rate-limited per IP and
+    validated by magic bytes + size to limit abuse.
+    """
     contents = await file.read()
     if len(contents) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="File too large. Maximum size is 2 MB.")
