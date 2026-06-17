@@ -78,7 +78,7 @@ async def notify_discord_tournament_approved(
         "title": f"✅ {title}",
         "url": tournament_url,
         "color": _GREEN,
-        "description": f"A new **Mobile Legends** tournament has been listed on Esportorium!",
+        "description": "A new **Mobile Legends** tournament has been listed on Esportorium!",
         "fields": [
             {"name": "Organiser",  "value": organiser,              "inline": True},
             {"name": "Format",     "value": f"{format_.capitalize()} · {location}", "inline": True},

@@ -1,0 +1,10 @@
+# Minimal ruff config — useful checks without overwhelming the project on day one.
+line-length = 120
+
+[lint]
+# E = pycodestyle, F = pyflakes (unused imports/vars, undefined names).
+select = ["E", "F"]
+ignore = [
+    "E501",  # line too long — not worth enforcing yet
+    "E712",  # comparison to True — required for SQLAlchemy filters (e.g. is_approved == True)
+]
