@@ -59,6 +59,21 @@ export default function Submit() {
       setError('Please complete the bot verification.')
       return
     }
+    // Date sanity checks — mirror the backend rules for instant feedback.
+    // ISO date strings (YYYY-MM-DD) compare correctly with < / >.
+    const today = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD in local time
+    if (form.start_date < today) {
+      setError('Start date must be today or in the future.')
+      return
+    }
+    if (form.end_date < form.start_date) {
+      setError('End date must be on or after the start date.')
+      return
+    }
+    if (form.registration_deadline > form.start_date) {
+      setError('Registration deadline must be on or before the tournament start date.')
+      return
+    }
     setError('')
     setLoading(true)
     try {
