@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Optional, Literal
 from sqlalchemy.orm import Session
 from app.models.tournament import Tournament

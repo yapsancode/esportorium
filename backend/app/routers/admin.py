@@ -1,14 +1,15 @@
 import os
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 import bcrypt as _bcrypt
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.limiter import limiter
 from app.models.tournament import Tournament
-from app.schemas.tournament import TournamentOut, TournamentCreate, TournamentUpdate, AuthLogin, TokenOut
+from app.schemas.tournament import TournamentAdminOut, TournamentCreate, TournamentUpdate, AuthLogin, TokenOut, MessageOut
 from app.services.notifications import (
     notify_discord_tournament_approved,
     notify_discord_tournament_rejected,
@@ -21,7 +22,9 @@ def _verify_password(plain: str, hashed: str) -> bool:
     return _bcrypt.checkpw(plain.encode(), hashed.encode())
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/admin/auth/login")
 
-JWT_SECRET = os.getenv("JWT_SECRET", "change-me")
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise RuntimeError("JWT_SECRET environment variable is not set — refusing to start with an insecure default")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "480"))
 
@@ -42,8 +45,9 @@ def get_current_admin(token: str = Depends(oauth2_scheme)):
 # --- Auth ---
 
 @router.post("/auth/login", response_model=TokenOut)
-def admin_login(data: AuthLogin):
-    """Authenticate admin and return a JWT."""
+@limiter.limit("5/minute")
+def admin_login(request: Request, data: AuthLogin):
+    """Authenticate admin and return a JWT. Rate-limited to slow brute-force attempts."""
     admin_username = os.getenv("ADMIN_USERNAME")
     admin_hash = os.getenv("ADMIN_PASSWORD_HASH")
     if data.username != admin_username or not _verify_password(data.password, admin_hash):
@@ -54,19 +58,19 @@ def admin_login(data: AuthLogin):
 
 # --- Tournament management ---
 
-@router.get("/tournaments", response_model=list[TournamentOut], dependencies=[Depends(get_current_admin)])
+@router.get("/tournaments", response_model=list[TournamentAdminOut], dependencies=[Depends(get_current_admin)])
 def admin_list_all(db: Session = Depends(get_db)):
     """List all tournaments including unapproved."""
     return db.query(Tournament).order_by(Tournament.created_at.desc()).all()
 
 
-@router.get("/submissions", response_model=list[TournamentOut], dependencies=[Depends(get_current_admin)])
+@router.get("/submissions", response_model=list[TournamentAdminOut], dependencies=[Depends(get_current_admin)])
 def admin_list_submissions(db: Session = Depends(get_db)):
     """List pending (unapproved) submissions."""
     return db.query(Tournament).filter(Tournament.is_approved == False).order_by(Tournament.created_at.desc()).all()
 
 
-@router.post("/tournaments", response_model=TournamentOut, status_code=201, dependencies=[Depends(get_current_admin)])
+@router.post("/tournaments", response_model=TournamentAdminOut, status_code=201, dependencies=[Depends(get_current_admin)])
 def admin_create_tournament(data: TournamentCreate, db: Session = Depends(get_db)):
     """Manually create an approved tournament."""
     tournament = Tournament(**data.model_dump())
@@ -76,7 +80,7 @@ def admin_create_tournament(data: TournamentCreate, db: Session = Depends(get_db
     return tournament
 
 
-@router.put("/tournaments/{tournament_id}", response_model=TournamentOut, dependencies=[Depends(get_current_admin)])
+@router.put("/tournaments/{tournament_id}", response_model=TournamentAdminOut, dependencies=[Depends(get_current_admin)])
 def admin_update_tournament(tournament_id: UUID, data: TournamentUpdate, db: Session = Depends(get_db)):
     """Edit a tournament."""
     tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
@@ -89,7 +93,7 @@ def admin_update_tournament(tournament_id: UUID, data: TournamentUpdate, db: Ses
     return tournament
 
 
-@router.patch("/tournaments/{tournament_id}/approve", response_model=TournamentOut, dependencies=[Depends(get_current_admin)])
+@router.patch("/tournaments/{tournament_id}/approve", response_model=TournamentAdminOut, dependencies=[Depends(get_current_admin)])
 def admin_approve(tournament_id: UUID, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Approve a pending submission and announce it on Discord."""
     tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
@@ -113,7 +117,7 @@ def admin_approve(tournament_id: UUID, background_tasks: BackgroundTasks, db: Se
     return tournament
 
 
-@router.patch("/tournaments/{tournament_id}/reject", dependencies=[Depends(get_current_admin)])
+@router.patch("/tournaments/{tournament_id}/reject", response_model=MessageOut, dependencies=[Depends(get_current_admin)])
 def admin_reject(tournament_id: UUID, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Reject and delete a pending submission, notify admin on Discord."""
     tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
@@ -127,7 +131,7 @@ def admin_reject(tournament_id: UUID, background_tasks: BackgroundTasks, db: Ses
     return {"detail": "Submission rejected and removed"}
 
 
-@router.delete("/tournaments/{tournament_id}", dependencies=[Depends(get_current_admin)])
+@router.delete("/tournaments/{tournament_id}", response_model=MessageOut, dependencies=[Depends(get_current_admin)])
 def admin_delete_tournament(tournament_id: UUID, db: Session = Depends(get_db)):
     """Delete a tournament."""
     tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()

@@ -18,10 +18,16 @@ router = APIRouter(prefix="/api/tournaments", tags=["tournaments"])
 
 # ─── Cloudflare Turnstile verification ───────────────────────────────────────
 
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 TURNSTILE_SECRET = os.getenv("TURNSTILE_SECRET_KEY", "")
 TURNSTILE_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
-# Test secret that always passes — safe for local dev, replace in production.
+# Test secret that always passes — for local dev only.
 TURNSTILE_TEST_SECRET = "1x0000000000000000000000000000000AA"
+
+# In production a missing secret would silently fall back to the always-pass test
+# key, disabling bot protection. Fail loudly at startup instead.
+if ENVIRONMENT == "production" and not TURNSTILE_SECRET:
+    raise RuntimeError("TURNSTILE_SECRET_KEY must be set in production")
 
 
 async def verify_turnstile(token: str) -> bool:
