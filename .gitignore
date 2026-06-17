@@ -24,6 +24,10 @@ frontend/dist/
 frontend/dist-ssr/
 *.local
 
+# ── Project notes (local only) ──────────────────────────────────────────────────
+CLAUDE.md
+CLAUDE.MD
+
 # ── OS / Editor ───────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
