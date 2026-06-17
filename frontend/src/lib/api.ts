@@ -64,6 +64,22 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   return res.json()
 }
 
+// Uploads a banner image to the backend (multipart) and returns its public URL.
+// Do NOT set Content-Type — the browser sets the multipart boundary automatically.
+export async function uploadBanner(file: File): Promise<string> {
+  const form = new FormData()
+  form.append('file', file)
+  let res: Response
+  try {
+    res = await fetch(`${BASE_URL}/api/upload/banner`, { method: 'POST', body: form })
+  } catch {
+    throw new NetworkError()
+  }
+  if (!res.ok) throw new ApiError(res.status)
+  const data = await res.json()
+  return data.url as string
+}
+
 export async function adminFetch(path: string, options: RequestInit = {}) {
   const token = getValidAdminToken()
   return apiFetch(path, {

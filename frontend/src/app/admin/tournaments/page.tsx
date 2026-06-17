@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
-import { adminFetch, ApiError } from '@/lib/api'
+import { adminFetch, uploadBanner, ApiError } from '@/lib/api'
 
 const STATES = [
   'Kuala Lumpur', 'Selangor', 'Johor', 'Penang', 'Sabah', 'Sarawak',
@@ -82,6 +82,8 @@ function AdminTournamentsContent() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
+  const [bannerUploading, setBannerUploading] = useState(false)
+  const [bannerError, setBannerError] = useState('')
 
   async function loadTournaments() {
     setLoading(true)
@@ -112,6 +114,29 @@ function AdminTournamentsContent() {
   }
   function setSelect(field: keyof FormState) {
     return (value: string) => setForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  async function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setBannerError('')
+    if (!file.type.startsWith('image/')) {
+      setBannerError('Please choose an image file.')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setBannerError('Image must be 2 MB or smaller.')
+      return
+    }
+    setBannerUploading(true)
+    try {
+      const url = await uploadBanner(file)
+      setForm(prev => ({ ...prev, banner_image: url }))
+    } catch {
+      setBannerError('Upload failed. Please try again.')
+    } finally {
+      setBannerUploading(false)
+    }
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -236,7 +261,16 @@ function AdminTournamentsContent() {
             </div>
             <Field label="Additional Prizes (optional, comma separated)" id="d-extras"><Input id="d-extras" placeholder="e.g. Trophy, Jersey" value={form.additional_prizes} onChange={set('additional_prizes')} /></Field>
             <Field label="Registration Link" id="d-reglink"><Input id="d-reglink" type="url" required value={form.registration_link} onChange={set('registration_link')} /></Field>
-            <Field label="Banner Image URL (optional)" id="d-banner"><Input id="d-banner" type="url" placeholder="https://..." value={form.banner_image} onChange={set('banner_image')} /></Field>
+            <Field label="Banner Image (optional)" id="d-banner-file">
+              {form.banner_image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={form.banner_image} alt="Banner preview" className="mb-2 h-32 w-full rounded-md border border-border object-cover" />
+              )}
+              <Input id="d-banner-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={bannerUploading} onChange={handleBannerUpload} />
+              {bannerUploading && <p className="mt-1 text-xs text-muted-foreground">Uploading…</p>}
+              {bannerError && <p className="mt-1 text-xs text-red-500">{bannerError}</p>}
+              <Input id="d-banner" type="url" placeholder="…or paste an image URL" className="mt-2" value={form.banner_image} onChange={set('banner_image')} />
+            </Field>
             <div className="border-t pt-4">
               <p className="mb-3 font-semibold text-sm">Organiser Info</p>
               <div className="space-y-4">
