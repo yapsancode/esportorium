@@ -5,6 +5,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { Tournament } from '@/lib/types'
 import Preloader from '@/components/ui/preloader'
+import JsonLd from '@/components/JsonLd'
+import { apiFetch } from '@/lib/api'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -33,22 +35,31 @@ function formatDateRange(start: string, end: string) {
   return `${fmt(start)} – ${fmt(end)}`
 }
 
-interface Props {
-  // null = fetch failed; [] = API returned empty list
-  initialTournaments: Tournament[] | null
-}
-
-export default function TournamentList({ initialTournaments }: Props) {
+export default function TournamentList() {
+  // undefined = still loading; null = fetch failed; [] = API returned empty list.
+  const [tournaments, setTournaments] = useState<Tournament[] | null | undefined>(undefined)
   const [showPreloader, setShowPreloader] = useState(true)
 
+  // Only show the full-screen preloader once per browser session.
   useEffect(() => {
-    const alreadyShown = sessionStorage.getItem(PRELOADER_KEY)
-    if (alreadyShown) {
+    if (sessionStorage.getItem(PRELOADER_KEY)) {
       setShowPreloader(false)
-      return
+    } else {
+      sessionStorage.setItem(PRELOADER_KEY, 'true')
     }
-    sessionStorage.setItem(PRELOADER_KEY, 'true')
   }, [])
+
+  // Fetch tournaments on the client so the page shell + preloader paint instantly,
+  // even while the backend cold-starts.
+  useEffect(() => {
+    let cancelled = false
+    apiFetch('/api/tournaments')
+      .then((data: Tournament[]) => { if (!cancelled) setTournaments(data) })
+      .catch(() => { if (!cancelled) setTournaments(null) })
+    return () => { cancelled = true }
+  }, [])
+
+  const dataReady = tournaments !== undefined
 
   const [statusFilter, setStatusFilter] = useState('upcoming')
   const [formatFilter, setFormatFilter] = useState('all')
@@ -60,7 +71,7 @@ export default function TournamentList({ initialTournaments }: Props) {
     if (val === 'online') setStateFilter('')
   }
 
-  const filtered = (initialTournaments ?? []).filter((t) => {
+  const filtered = (tournaments ?? []).filter((t) => {
     if (statusFilter !== 'all' && t.status !== statusFilter) return false
     if (formatFilter !== 'all' && t.format !== formatFilter) return false
     if (stateFilter && formatFilter !== 'online') {
@@ -71,9 +82,25 @@ export default function TournamentList({ initialTournaments }: Props) {
 
   const stateDisabled = formatFilter === 'online'
 
+  const itemListSchema = tournaments && tournaments.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Malaysian Esports Tournaments",
+    "description": "Curated list of Mobile Legends tournaments in Malaysia.",
+    "url": "https://esportorium.com",
+    "numberOfItems": tournaments.length,
+    "itemListElement": tournaments.slice(0, 20).map((t, i) => ({
+      "@type": "ListItem",
+      "position": i + 1,
+      "url": `https://esportorium.com/tournament/${t.id}`,
+      "name": t.title,
+    })),
+  } : null
+
   return (
     <>
-      <Preloader show={showPreloader} />
+      {showPreloader && <Preloader done={dataReady} />}
+      {itemListSchema && <JsonLd schema={itemListSchema} />}
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-extrabold text-foreground sm:text-4xl">
@@ -159,7 +186,11 @@ export default function TournamentList({ initialTournaments }: Props) {
           </div>
         </div>
 
-        {initialTournaments === null ? (
+        {tournaments === undefined ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <p className="text-sm text-muted-foreground">Loading tournaments…</p>
+          </div>
+        ) : tournaments === null ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="text-lg font-semibold text-foreground">Could not load tournaments</p>
             <p className="mt-1 text-sm text-muted-foreground">
