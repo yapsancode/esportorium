@@ -1,21 +1,22 @@
 name: Backend CI/CD
 
-# Runs tests on every PR + push that touches the backend.
-# On push to main, deploys to Cloud Run — but only after tests pass.
+# Runs on PRs to main (lint + tests) and on pushes to main (lint + tests → deploy).
+# Path filter: only triggers when backend code or this workflow changes.
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
   push:
     branches: [main]
     paths:
       - 'backend/**'
       - '.github/workflows/backend.yml'
-  pull_request:
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend.yml'
 
 jobs:
-  # ── 1. Test ────────────────────────────────────────────────────────────────
-  test:
+  # ── CI: lint + tests. Runs on every PR and push. ───────────────────────────
+  checks:
     runs-on: ubuntu-latest
 
     # A throwaway Postgres so the app can boot and create its tables.
@@ -36,6 +37,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://test:test@localhost:5432/test
+      JWT_SECRET: test-secret-for-ci   # app.main requires this at import time
 
     defaults:
       run:
@@ -55,28 +57,30 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
+      - name: Lint with ruff
+        run: ruff check .
+
       - name: Run tests
         run: pytest -v
 
-  # ── 2. Deploy (main only, after tests pass) ────────────────────────────────
+  # ── CD: deploy to Cloud Run. Only on push to main, after checks pass. ───────
   deploy:
-    needs: test
-    if: github.ref == 'refs/heads/main'
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
-      id-token: write   # lets GitHub mint the OIDC token for Workload Identity
+      id-token: write   # required for Workload Identity Federation
 
     steps:
       - uses: actions/checkout@v4
 
-      - id: auth
-        name: Authenticate to Google Cloud
+      - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          workload_identity_provider: 'projects/742836129132/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-deployer@esportorium.iam.gserviceaccount.com'
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
@@ -84,8 +88,8 @@ jobs:
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy esportorium-backend \
-            --source backend/ \
+            --source backend \
             --region asia-southeast1 \
-            --project "${{ secrets.GCP_PROJECT_ID }}" \
+            --project esportorium \
             --allow-unauthenticated \
             --quiet
