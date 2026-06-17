@@ -14,6 +14,7 @@ from app.services.notifications import (
     notify_discord_tournament_approved,
     notify_discord_tournament_rejected,
 )
+from app.services.email import send_approval_email, send_rejection_email
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -114,6 +115,14 @@ def admin_approve(tournament_id: UUID, background_tasks: BackgroundTasks, db: Se
         registration_link=tournament.registration_link,
         banner_image=tournament.banner_image,
     )
+    background_tasks.add_task(
+        send_approval_email,
+        to=tournament.organiser_email,
+        title=tournament.title,
+        registration_link=tournament.registration_link,
+        start_date=str(tournament.start_date),
+        tournament_url=f"https://esportorium.com/tournament/{tournament.id}",
+    )
     return tournament
 
 
@@ -125,9 +134,11 @@ def admin_reject(tournament_id: UUID, background_tasks: BackgroundTasks, db: Ses
         raise HTTPException(status_code=404, detail="Tournament not found")
     title = tournament.title
     organiser = tournament.organiser_name
+    organiser_email = tournament.organiser_email
     db.delete(tournament)
     db.commit()
     background_tasks.add_task(notify_discord_tournament_rejected, title=title, organiser=organiser)
+    background_tasks.add_task(send_rejection_email, to=organiser_email, title=title)
     return {"detail": "Submission rejected and removed"}
 
 

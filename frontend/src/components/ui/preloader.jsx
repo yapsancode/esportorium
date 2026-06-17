@@ -3,63 +3,47 @@
 import gsap from "gsap";
 import { useLayoutEffect, useRef, useState } from "react";
 
-const MIN_DISPLAY_MS = 3000; // 3000 miliseconds
+const MIN_DISPLAY_MS = 2000; // keep the preloader up at least this long for a smooth feel
 
-export default function Preloader({ show = true }) {
+// Controlled preloader: stays up until `done` is true AND the minimum display
+// time has elapsed, then plays the slide-up exit animation. The parent flips
+// `done` to true once its data has loaded (or failed).
+export default function Preloader({ done = false }) {
   const loaderRef = useRef(null);
   const textRef = useRef(null);
-  const [loaded, setLoaded] = useState(false);
+  const startRef = useRef(Date.now());
+  const [leaving, setLeaving] = useState(false);
 
-  // Wait for both document.readyState === "complete" AND the minimum delay
+  // Once data is ready, wait out the remaining minimum display time, then leave.
   useLayoutEffect(() => {
-    if (!show) return;
+    if (!done) return;
+    const elapsed = Date.now() - startRef.current;
+    const wait = Math.max(0, MIN_DISPLAY_MS - elapsed);
+    const timer = setTimeout(() => setLeaving(true), wait);
+    return () => clearTimeout(timer);
+  }, [done]);
 
-    let animationFrame;
-    const startTime = Date.now();
-
-    const checkReady = () => {
-      const elapsed = Date.now() - startTime;
-      if (document.readyState === "complete" && elapsed >= MIN_DISPLAY_MS) {
-        setLoaded(true);
-      } else {
-        animationFrame = requestAnimationFrame(checkReady);
-      }
-    };
-
-    checkReady();
-    return () => cancelAnimationFrame(animationFrame);
-  }, [show]);
-
-  // Run exit animation once the delay + readiness condition is met
+  // Play the exit animation.
   useLayoutEffect(() => {
-    if (!show) return;
-
-    if (loaded && loaderRef.current && textRef.current) {
-      const tl = gsap.timeline({
-        defaults: { ease: "power2.inOut" },
-        onComplete: () => {
-          gsap.set(loaderRef.current, {
-            pointerEvents: "none",
-            display: "none",
-          });
-        },
-      });
-
-      tl.to(textRef.current, { scale: 5, opacity: 0, duration: 0.8 });
-      tl.to(
-        loaderRef.current,
-        {
-          y: "-105%",
-          borderBottomLeftRadius: "50% 20%",
-          borderBottomRightRadius: "50% 20%",
-          duration: 1,
-        },
-        "<"
-      );
-    }
-  }, [loaded, show]);
-
-  if (!show) return null;
+    if (!leaving || !loaderRef.current || !textRef.current) return;
+    const tl = gsap.timeline({
+      defaults: { ease: "power2.inOut" },
+      onComplete: () => {
+        gsap.set(loaderRef.current, { pointerEvents: "none", display: "none" });
+      },
+    });
+    tl.to(textRef.current, { scale: 5, opacity: 0, duration: 0.8 });
+    tl.to(
+      loaderRef.current,
+      {
+        y: "-105%",
+        borderBottomLeftRadius: "50% 20%",
+        borderBottomRightRadius: "50% 20%",
+        duration: 1,
+      },
+      "<"
+    );
+  }, [leaving]);
 
   return (
     <div
