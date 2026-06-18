@@ -43,6 +43,17 @@ const FAQS = [
       { q: "Is Esportorium available as a mobile app?", a: "Not yet. The web platform is mobile-responsive, but a native app is planned for a later version." },
     ],
   },
+  {
+    category: 'Trust & Privacy',
+    items: [
+      { q: "Where do the tournament listings come from?", a: "Every listing is submitted by its organiser through our public form — we don't scrape, auto-aggregate, or copy tournaments from other sites. A human reviews each submission before it goes live." },
+      { q: "How do you verify a tournament before listing it?", a: "We check that the registration link works, the dates are valid and not already passed, the tournament is Mobile Legends and relevant to Malaysian players, and that the organiser appears legitimate and contactable. You can read the full methodology on our About page. Note: we can't independently guarantee every detail (such as exact prize amounts), so always confirm specifics with the organiser." },
+      { q: "Is my organiser email shown publicly?", a: "No. The email you provide for approval notifications is private and admin-only — it is never displayed on the site, included in our public data, or sold. The contact you provide for players to register (WhatsApp or email) is shown publicly, because that's how participants reach you to sign up." },
+      { q: "What data do you collect about me?", a: "From organisers: your submission details, organiser name, public registration contact, a private notification email, and an optional banner image. From visitors: anonymous, cookieless usage analytics. Full details are on our Privacy page." },
+      { q: "Can I have my tournament and data removed?", a: "Yes. Email team.iidevstudio@gmail.com with the tournament name and we'll remove it promptly. Rejected submissions are deleted automatically; approved listings are removed on request." },
+      { q: "Do you sell my data?", a: "No — never. We use trusted infrastructure providers (hosting, email delivery, image storage, bot protection) solely to run the platform. We don't sell or rent your data to anyone. See our Privacy page for the list of services we rely on." },
+    ],
+  },
 ]
 
 const FAQ_SCHEMA = {
