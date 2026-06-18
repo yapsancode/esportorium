@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Trophy, MapPin, Users, Zap, Info, Code, ExternalLink } from 'lucide-react'
+import { Trophy, MapPin, Users, Zap, Info, Code, ExternalLink, ShieldCheck, CheckCircle2 } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'About Esportorium — Malaysia Esports Tournament Platform',
@@ -57,7 +57,10 @@ const ORG_SCHEMA = {
     "areaServed": "MY",
     "availableLanguage": ["English", "Malay"],
   },
-  "sameAs": [],
+  "sameAs": [
+    "https://discord.gg/XufVXcbS",
+    "https://t.me/esportorium",
+  ],
 }
 
 export default function About() {
@@ -117,6 +120,46 @@ export default function About() {
               </Card>
             ))}
           </div>
+        </section>
+
+        <Separator className="my-10" />
+
+        <section className="mb-12">
+          <div className="mb-4 flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            <h2 className="text-2xl font-bold">How We Source &amp; Verify Tournaments</h2>
+          </div>
+          <p className="text-muted-foreground leading-relaxed">
+            Every tournament on Esportorium is <strong className="text-foreground">submitted by its organiser</strong> —
+            we do not scrape, auto-aggregate, or copy listings from other sites. Before anything goes live,
+            a human reviews it. Here is what we check on every submission:
+          </p>
+          <ul className="mt-5 space-y-3">
+            {[
+              ['Registration link works', 'We open the link and confirm it leads to a real, working registration page.'],
+              ['Dates make sense', 'Start, end, and deadline dates are valid and the event has not already passed.'],
+              ['Fits our scope', 'It is a Mobile Legends tournament relevant to players in Malaysia.'],
+              ['Organiser looks legitimate', 'We do a basic check that the organiser and event appear genuine and contactable.'],
+            ].map(([title, desc]) => (
+              <li key={title} className="flex items-start gap-3">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <span className="text-sm text-muted-foreground">
+                  <strong className="text-foreground">{title}.</strong> {desc}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-5 text-muted-foreground leading-relaxed">
+            Tournament <strong className="text-foreground">status</strong> (upcoming, current, past) is never set by
+            hand — it is calculated automatically from the start and end dates, so it is always accurate.
+          </p>
+          <p className="mt-4 rounded-lg bg-muted/60 px-5 py-4 text-sm leading-relaxed text-muted-foreground">
+            <strong className="text-foreground">Being transparent about the limits:</strong> our review confirms a
+            listing is legitimate and correctly scoped, but we cannot independently guarantee every detail — such
+            as exact prize amounts or that an event will run exactly as described. If you spot something wrong,{' '}
+            <a href="mailto:team.iidevstudio@gmail.com" className="text-primary hover:underline">tell us</a> and we
+            will update or remove it quickly.
+          </p>
         </section>
 
         <Separator className="my-10" />
