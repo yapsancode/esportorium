@@ -91,8 +91,8 @@ async def send_approval_email(
     """Notify an organiser that their tournament has been approved and listed."""
     body = f"""\
     <p style="{_P}">Good news! Your tournament <strong>{title}</strong> has been approved and is
-    now live on Esportorium. 🎉</p>
-    <p style="{_P}">📅 <strong>Starts:</strong> {start_date}</p>
+    now live on Esportorium.</p>
+    <p style="{_P}"><strong>Starts:</strong> {start_date}</p>
     <div style="margin:24px 0;text-align:center">{_button(tournament_url, "View your listing")}</div>
     <p style="margin:0 0 14px;font-size:13px;line-height:1.6;color:{_MUTED}">
       Registration link players will use:
