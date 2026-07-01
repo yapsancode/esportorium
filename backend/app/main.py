@@ -3,11 +3,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from app.database import Base, engine
 from app.limiter import limiter
 from app.routers import tournaments, admin, upload
 
-Base.metadata.create_all(bind=engine)
+# Schema is managed by Alembic (see backend/alembic/) — run `alembic upgrade head`
+# to apply migrations. No create_all() here; it would create tables outside
+# migration history and mask drift between models and the applied schema.
 
 app = FastAPI(title="Esportorium API", version="0.1.0")
 
