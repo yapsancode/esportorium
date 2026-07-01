@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { LayoutGrid, List, Wifi, MapPin } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, DEFAULT_BANNER } from '@/lib/utils'
 
 const STATES = [
   'Kuala Lumpur', 'Selangor', 'Johor', 'Penang', 'Sabah', 'Sarawak',
@@ -25,11 +25,13 @@ const FORMAT_OPTIONS = [
   { value: 'all',     label: 'All' },
   { value: 'online',  label: 'Online',  icon: <Wifi className="h-3.5 w-3.5" /> },
   { value: 'offline', label: 'Offline', icon: <MapPin className="h-3.5 w-3.5" /> },
+  { value: 'hybrid',  label: 'Hybrid',  icon: <MapPin className="h-3.5 w-3.5" /> },
 ]
 
 const PRELOADER_KEY = 'esportorium_preloader_shown'
 
-function formatDateRange(start: string, end: string) {
+function formatDateRange(start: string | null, end: string | null) {
+  if (!start || !end) return 'Date TBA'
   const fmt = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' })
   if (start === end) return fmt(start)
   return `${fmt(start)} – ${fmt(end)}`
@@ -75,7 +77,7 @@ export default function TournamentList() {
     if (statusFilter !== 'all' && t.status !== statusFilter) return false
     if (formatFilter !== 'all' && t.format !== formatFilter) return false
     if (stateFilter && formatFilter !== 'online') {
-      if (t.format === 'offline' && t.state !== stateFilter) return false
+      if ((t.format === 'offline' || t.format === 'hybrid') && t.state !== stateFilter) return false
     }
     return true
   })
@@ -221,6 +223,7 @@ function TournamentCard({ tournament, viewMode }: { tournament: Tournament; view
   const { id, title, status, format, state, organiser_name, prize_pool_rm, start_date, end_date, banner_image } = tournament
   const location = format === 'online' ? 'Online' : (state || 'Malaysia')
   const dateRange = formatDateRange(start_date, end_date)
+  const prizeLabel = prize_pool_rm != null ? `RM ${prize_pool_rm.toLocaleString()}` : 'RM TBD'
 
   if (viewMode === 'list') {
     return (
@@ -228,7 +231,7 @@ function TournamentCard({ tournament, viewMode }: { tournament: Tournament; view
         <Card className="overflow-hidden transition-shadow hover:shadow-md cursor-pointer">
           <div className="flex items-center gap-4 p-4">
             <div className="relative h-16 w-24 shrink-0 rounded-md bg-muted overflow-hidden">
-              {banner_image && <Image src={banner_image} alt={title} fill sizes="96px" className="object-cover" />}
+              <Image src={banner_image || DEFAULT_BANNER} alt={title} fill sizes="96px" className="object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
@@ -238,11 +241,11 @@ function TournamentCard({ tournament, viewMode }: { tournament: Tournament; view
                   <Badge variant={status as any}>{capitalise(status)}</Badge>
                 </div>
               </div>
-              <p className="mt-0.5 text-sm text-muted-foreground">{organiser_name}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{organiser_name ?? 'Organiser TBD'}</p>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span>📅 {dateRange}</span>
                 <span>📍 {location}</span>
-                <span>🏆 RM {prize_pool_rm.toLocaleString()}</span>
+                <span>🏆 {prizeLabel}</span>
               </div>
             </div>
           </div>
@@ -255,14 +258,14 @@ function TournamentCard({ tournament, viewMode }: { tournament: Tournament; view
     <Link href={`/tournament/${id}`}>
       <Card className="overflow-hidden transition-shadow hover:shadow-md cursor-pointer">
         <div className="relative aspect-video w-full bg-muted overflow-hidden">
-          {banner_image && <Image src={banner_image} alt={title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" />}
+          <Image src={banner_image || DEFAULT_BANNER} alt={title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" />
         </div>
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="text-base leading-snug">{title}</CardTitle>
             <Badge variant={status as any} className="shrink-0">{capitalise(status)}</Badge>
           </div>
-          <CardDescription>{organiser_name}</CardDescription>
+          <CardDescription>{organiser_name ?? 'Organiser TBD'}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-1 text-sm text-muted-foreground">
           <p>📅 {dateRange}</p>
@@ -270,27 +273,33 @@ function TournamentCard({ tournament, viewMode }: { tournament: Tournament; view
             <p>📍 {location}</p>
             <FormatBadge format={format} />
           </div>
-          <p>🏆 RM {prize_pool_rm.toLocaleString()} prize pool</p>
+          <p>🏆 {prizeLabel} prize pool</p>
         </CardContent>
       </Card>
     </Link>
   )
 }
 
-function FormatBadge({ format }: { format: string }) {
+function FormatBadge({ format }: { format: Tournament['format'] }) {
+  if (!format) return null
+  const styles: Record<string, string> = {
+    online: 'bg-blue-50 text-blue-700',
+    offline: 'bg-orange-50 text-orange-700',
+    hybrid: 'bg-purple-50 text-purple-700',
+  }
+  const labels: Record<string, React.ReactNode> = {
+    online: <><Wifi className="h-3 w-3" /> Online</>,
+    offline: <><MapPin className="h-3 w-3" /> Offline</>,
+    hybrid: <><Wifi className="h-3 w-3" /> + <MapPin className="h-3 w-3" /> Hybrid</>,
+  }
   return (
-    <span className={cn(
-      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
-      format === 'online' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'
-    )}>
-      {format === 'online'
-        ? <><Wifi className="h-3 w-3" /> Online</>
-        : <><MapPin className="h-3 w-3" /> Offline</>
-      }
+    <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium', styles[format])}>
+      {labels[format]}
     </span>
   )
 }
 
 function capitalise(str: string) {
+  if (str === 'tbd') return 'TBD'
   return str.charAt(0).toUpperCase() + str.slice(1)
 }

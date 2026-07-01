@@ -14,6 +14,7 @@ const badgeVariants = cva(
         current:   "bg-green-100 text-green-700",
         past:      "bg-muted text-muted-foreground",
         pending:   "bg-yellow-100 text-yellow-700",
+        tbd:       "bg-yellow-100 text-yellow-700",
       },
     },
     defaultVariants: { variant: "default" },

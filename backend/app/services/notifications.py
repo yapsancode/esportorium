@@ -56,11 +56,11 @@ async def notify_discord_tournament_approved(
     tournament_id: str,
     title: str,
     organiser: str,
-    format_: str,
+    format_: str | None,
     state: str | None,
-    prize_pool_rm: int,
+    prize_pool_rm: int | None,
     start_date: str,
-    registration_link: str,
+    registration_link: str | None,
     banner_image: str | None,
 ) -> None:
     """Announce an approved tournament to the public community channel.
@@ -72,6 +72,8 @@ async def notify_discord_tournament_approved(
         return
 
     location = state if state else "Online"
+    format_label = format_.capitalize() if format_ else "TBD"
+    prize_label = f"RM {prize_pool_rm:,}" if prize_pool_rm is not None else "TBD"
     tournament_url = f"https://esportorium.com/tournament/{tournament_id}"
 
     embed: dict = {
@@ -81,10 +83,10 @@ async def notify_discord_tournament_approved(
         "description": "A new **Mobile Legends** tournament has been listed on Esportorium!",
         "fields": [
             {"name": "Organiser",  "value": organiser,              "inline": True},
-            {"name": "Format",     "value": f"{format_.capitalize()} · {location}", "inline": True},
-            {"name": "Prize Pool", "value": f"RM {prize_pool_rm:,}", "inline": True},
+            {"name": "Format",     "value": f"{format_label} · {location}", "inline": True},
+            {"name": "Prize Pool", "value": prize_label,            "inline": True},
             {"name": "Starts",     "value": start_date,             "inline": True},
-            {"name": "Register",   "value": registration_link,      "inline": False},
+            {"name": "Register",   "value": registration_link or "TBD", "inline": False},
         ],
         "footer": {"text": "esportorium.com — Malaysia Esports Tournaments"},
     }

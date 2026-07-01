@@ -5,9 +5,9 @@ from app.models.tournament import Tournament
 
 def get_approved_tournaments(
     db: Session,
-    status_filter: Optional[Literal["upcoming", "current", "past"]] = None,
+    status_filter: Optional[Literal["upcoming", "current", "past", "tbd"]] = None,
     state_filter: Optional[str] = None,
-    format_filter: Optional[Literal["online", "offline"]] = None,
+    format_filter: Optional[Literal["online", "offline", "hybrid"]] = None,
 ) -> list[Tournament]:
     query = db.query(Tournament).filter(Tournament.is_approved == True)
 

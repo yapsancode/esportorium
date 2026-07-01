@@ -31,3 +31,8 @@ def test_status_current_multi_day():
 def test_status_past():
     t = _make(TODAY - timedelta(days=5), TODAY - timedelta(days=4))
     assert t.status == "past"
+
+
+def test_status_tbd_when_dates_missing():
+    assert Tournament(start_date=None, end_date=None).status == "tbd"
+    assert Tournament(start_date=TODAY, end_date=None).status == "tbd"

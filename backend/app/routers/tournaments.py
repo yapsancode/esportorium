@@ -49,9 +49,9 @@ async def verify_turnstile(token: str) -> bool:
 
 @router.get("", response_model=list[TournamentOut])
 def list_tournaments(
-    status: Optional[Literal["upcoming", "current", "past"]] = None,
+    status: Optional[Literal["upcoming", "current", "past", "tbd"]] = None,
     state: Optional[str] = None,
-    format: Optional[Literal["online", "offline"]] = None,
+    format: Optional[Literal["online", "offline", "hybrid"]] = None,
     db: Session = Depends(get_db),
 ):
     """List all approved tournaments with optional filters."""

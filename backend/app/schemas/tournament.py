@@ -4,35 +4,59 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
+def _reject_html(v: str) -> str:
+    """Strip whitespace and reject obvious HTML/script injection."""
+    v = v.strip()
+    for bad in ("<script", "javascript:", "onerror=", "onload="):
+        if bad.lower() in v.lower():
+            raise ValueError("Input contains disallowed content")
+    return v
+
+
+class PrizeBreakdownItem(BaseModel):
+    """One row of the cash prize split, e.g. {"placement": "Champion", "reward": "RM 5,000"}."""
+    placement: str = Field(..., min_length=1, max_length=50, strip_whitespace=True)
+    reward:    str = Field(..., min_length=1, max_length=100, strip_whitespace=True)
+
+    @field_validator("placement", "reward", mode="before")
+    @classmethod
+    def _clean(cls, v: str) -> str:
+        return _reject_html(str(v))
+
+
 # ─── Shared base ─────────────────────────────────────────────────────────────
+# Only `title` is required here. Everything else is optional so admins can
+# manually seed tournaments with incomplete info (e.g. scraped listings).
+# TournamentSubmit (the public form) re-declares the fields organisers must
+# provide, since that submission still needs to be complete.
 
 class TournamentBase(BaseModel):
     title:                 str = Field(..., min_length=3, max_length=200, strip_whitespace=True)
-    format:                Literal["online", "offline"]
+    format:                Optional[Literal["online", "offline", "hybrid"]] = None
     state:                 Optional[str] = Field(default=None, max_length=100)
     venue:                 Optional[str] = Field(default=None, max_length=300, strip_whitespace=True)
-    start_date:            date
-    end_date:              date
-    registration_deadline: date
-    prize_pool_rm:         int = Field(..., ge=0, le=10_000_000)
+    stage_notes:           Optional[str] = Field(default=None, max_length=300, strip_whitespace=True)
+    description:           Optional[str] = Field(default=None, max_length=2000, strip_whitespace=True)
+    start_date:            Optional[date] = None
+    end_date:              Optional[date] = None
+    registration_deadline: Optional[date] = None
+    prize_pool_rm:         Optional[int] = Field(default=None, ge=0, le=10_000_000)
     additional_prizes:     list[str] = Field(default_factory=list, max_length=10)
-    max_teams:             int = Field(..., ge=2, le=10_000)
-    organiser_name:        str = Field(..., min_length=2, max_length=100, strip_whitespace=True)
-    organiser_contact:     str = Field(..., min_length=5, max_length=100, strip_whitespace=True)
-    registration_link:     str = Field(..., min_length=10, max_length=500)
+    prize_breakdown:       list[PrizeBreakdownItem] = Field(default_factory=list, max_length=15)
+    max_teams:             Optional[int] = Field(default=None, ge=2, le=10_000)
+    organiser_name:        Optional[str] = Field(default=None, max_length=100, strip_whitespace=True)
+    organiser_contact:     Optional[str] = Field(default=None, max_length=100, strip_whitespace=True)
+    registration_link:     Optional[str] = Field(default=None, max_length=500)
     banner_image:          Optional[str] = Field(default=None, max_length=500)
 
     # ── Field validators ──────────────────────────────────────────────────────
 
-    @field_validator("title", "organiser_name", "organiser_contact", mode="before")
+    @field_validator("title", "organiser_name", "organiser_contact", "description", mode="before")
     @classmethod
-    def strip_and_no_html(cls, v: str) -> str:
-        """Strip whitespace and reject obvious HTML/script injection."""
-        v = v.strip()
-        for bad in ("<script", "javascript:", "onerror=", "onload="):
-            if bad.lower() in v.lower():
-                raise ValueError("Input contains disallowed content")
-        return v
+    def strip_and_no_html(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        return _reject_html(str(v))
 
     @field_validator("additional_prizes", mode="before")
     @classmethod
@@ -41,7 +65,9 @@ class TournamentBase(BaseModel):
 
     @field_validator("registration_link", mode="before")
     @classmethod
-    def validate_url(cls, v: str) -> str:
+    def validate_url(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or v == "":
+            return None
         v = v.strip()
         if not (v.startswith("http://") or v.startswith("https://")):
             raise ValueError("Registration link must start with http:// or https://")
@@ -51,21 +77,34 @@ class TournamentBase(BaseModel):
 
     @model_validator(mode="after")
     def check_date_logic(self) -> "TournamentBase":
-        if self.end_date < self.start_date:
+        if self.start_date and self.end_date and self.end_date < self.start_date:
             raise ValueError("end_date must be on or after start_date")
-        if self.registration_deadline > self.start_date:
+        if self.registration_deadline and self.start_date and self.registration_deadline > self.start_date:
             raise ValueError("registration_deadline must be on or before start_date")
-        if self.format == "offline" and not self.state:
-            raise ValueError("state is required for offline tournaments")
+        if self.format in ("offline", "hybrid") and not self.state:
+            raise ValueError("state is required for offline and hybrid tournaments")
         return self
 
 
 # ─── Public submit schema (adds Turnstile token + future-date check) ─────────
 
 class TournamentSubmit(TournamentBase):
-    """Used by the public submit endpoint — creates an unapproved record."""
-    organiser_email: EmailStr   # internal notification address; never exposed in public responses
-    turnstile_token: str = Field(..., min_length=1, description="Cloudflare Turnstile response token")
+    """Used by the public submit endpoint — creates an unapproved record.
+
+    Re-declares the fields organisers must actually provide; TournamentBase
+    only enforces `title` so it can double as the admin manual-seeding schema.
+    """
+    format:                Literal["online", "offline", "hybrid"]
+    start_date:            date
+    end_date:              date
+    registration_deadline: date
+    prize_pool_rm:         int = Field(..., ge=0, le=10_000_000)
+    max_teams:             int = Field(..., ge=2, le=10_000)
+    organiser_name:        str = Field(..., min_length=2, max_length=100, strip_whitespace=True)
+    organiser_contact:     str = Field(..., min_length=5, max_length=100, strip_whitespace=True)
+    organiser_email:       EmailStr   # internal notification address; never exposed in public responses
+    registration_link:     str = Field(..., min_length=10, max_length=500)
+    turnstile_token:       str = Field(..., min_length=1, description="Cloudflare Turnstile response token")
 
     @model_validator(mode="after")
     def check_dates_in_future(self) -> "TournamentSubmit":
@@ -78,21 +117,25 @@ class TournamentSubmit(TournamentBase):
 # ─── Admin schemas ────────────────────────────────────────────────────────────
 
 class TournamentCreate(TournamentBase):
-    """Used by admin to manually create a tournament — no Turnstile, no future-date restriction."""
-    organiser_email: EmailStr
+    """Used by admin to manually create a tournament — no Turnstile, no future-date
+    restriction, and only `title` is required (manual seeding often has gaps)."""
+    organiser_email: Optional[EmailStr] = None
     is_approved: bool = True
 
 
 class TournamentUpdate(BaseModel):
     title:                 Optional[str]                      = Field(default=None, min_length=3, max_length=200)
-    format:                Optional[Literal["online", "offline"]] = None
+    format:                Optional[Literal["online", "offline", "hybrid"]] = None
     state:                 Optional[str]                      = None
     venue:                 Optional[str]                      = None
+    stage_notes:           Optional[str]                      = None
+    description:           Optional[str]                      = Field(default=None, max_length=2000)
     start_date:            Optional[date]                     = None
     end_date:              Optional[date]                     = None
     registration_deadline: Optional[date]                     = None
     prize_pool_rm:         Optional[int]                      = Field(default=None, ge=0)
     additional_prizes:     Optional[list[str]]                = None
+    prize_breakdown:       Optional[list[PrizeBreakdownItem]] = None
     max_teams:             Optional[int]                      = Field(default=None, ge=2)
     organiser_name:        Optional[str]                      = Field(default=None, max_length=100)
     organiser_contact:     Optional[str]                      = Field(default=None, max_length=100)
@@ -118,7 +161,7 @@ class TournamentOut(TournamentBase):
 
 class TournamentAdminOut(TournamentOut):
     """Admin response — includes the organiser's notification email."""
-    organiser_email: EmailStr
+    organiser_email: Optional[EmailStr] = None
 
 
 # ─── Auth schemas ─────────────────────────────────────────────────────────────
