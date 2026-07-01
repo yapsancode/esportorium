@@ -9,13 +9,15 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Share2, ExternalLink, ChevronDown, ChevronUp, CalendarPlus, MessageCircle, Check, ArrowLeft } from 'lucide-react'
 
-function formatDate(d: string) {
+function formatDate(d: string | null) {
+  if (!d) return 'TBD'
   return new Date(d + 'T00:00:00').toLocaleDateString('en-MY', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 }
 
-function whatsAppUrl(contact: string) {
+function whatsAppUrl(contact: string | null) {
+  if (!contact) return null
   const digits = contact.replace(/\D/g, '')
   if (digits.length < 9) return null
   const withCode = digits.startsWith('60') ? digits : `60${digits.replace(/^0/, '')}`
@@ -58,7 +60,7 @@ export default function TournamentDetailClient({ tournament }: { tournament: Tou
   const [calendarOpen, setCalendarOpen]     = useState(false)
 
   const {
-    title, status, format, state, venue,
+    title, status, format, state, venue, stage_notes,
     start_date, end_date, registration_deadline,
     prize_pool_rm, additional_prizes, max_teams,
     organiser_name, organiser_contact,
@@ -66,9 +68,14 @@ export default function TournamentDetailClient({ tournament }: { tournament: Tou
   } = tournament
 
   const pageUrl      = typeof window !== 'undefined' ? window.location.href : ''
-  const formatLabel  = format === 'online' ? 'Online' : `Offline${state ? ` · ${state}` : ''}`
-  const description  = `A Mobile Legends tournament open to Malaysian participants. Prize pool: RM ${prize_pool_rm.toLocaleString()}. Register before ${formatDate(registration_deadline)}.`
+  const formatLabel  = format === 'online' ? 'Online'
+    : format === 'hybrid' ? `Hybrid${state ? ` · ${state}` : ''}`
+    : format === 'offline' ? `Offline${state ? ` · ${state}` : ''}`
+    : 'Format TBD'
+  const prizeLabel   = prize_pool_rm != null ? `RM ${prize_pool_rm.toLocaleString()}` : 'TBD'
+  const description  = `A Mobile Legends tournament open to Malaysian participants. Prize pool: ${prizeLabel}. Register before ${formatDate(registration_deadline)}.`
   const wa           = whatsAppUrl(organiser_contact)
+  const hasDates     = Boolean(start_date && end_date)
 
   async function handleShare() {
     if (navigator.share) {
@@ -89,19 +96,23 @@ export default function TournamentDetailClient({ tournament }: { tournament: Tou
       </Link>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Badge variant={status as any}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>
+        <Badge variant={status as any}>{status === 'tbd' ? 'TBD' : status.charAt(0).toUpperCase() + status.slice(1)}</Badge>
         <span className="text-sm text-muted-foreground">Mobile Legends · {formatLabel}</span>
       </div>
 
       <h1 className="text-3xl font-extrabold text-foreground sm:text-4xl">{title}</h1>
-      <p className="mt-1 text-muted-foreground">Organised by {organiser_name}</p>
+      <p className="mt-1 text-muted-foreground">Organised by {organiser_name ?? 'TBD'}</p>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <a href={registration_link} target="_blank" rel="noreferrer">
-          <Button>
-            Register Now <ExternalLink className="ml-1 h-4 w-4" />
-          </Button>
-        </a>
+        {registration_link ? (
+          <a href={registration_link} target="_blank" rel="noreferrer">
+            <Button>
+              Register Now <ExternalLink className="ml-1 h-4 w-4" />
+            </Button>
+          </a>
+        ) : (
+          <Button disabled>Registration link coming soon</Button>
+        )}
 
         <Button variant="outline" onClick={handleShare}>
           {copied
@@ -110,29 +121,31 @@ export default function TournamentDetailClient({ tournament }: { tournament: Tou
           }
         </Button>
 
-        <div className="relative">
-          <Button variant="outline" onClick={() => setCalendarOpen(!calendarOpen)}>
-            <CalendarPlus className="mr-2 h-4 w-4" /> Add to Calendar
-          </Button>
-          {calendarOpen && (
-            <div className="absolute left-0 top-12 z-10 w-52 rounded-lg border border-border bg-background shadow-md">
-              <button
-                onClick={() => { downloadIcs({ title, startDate: start_date, endDate: end_date, url: pageUrl }); setCalendarOpen(false) }}
-                className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm hover:bg-muted transition-colors rounded-t-lg"
-              >
-                Download .ics (Apple / Outlook)
-              </button>
-              <a
-                href={googleCalendarUrl({ title, startDate: start_date, endDate: end_date, description })}
-                target="_blank" rel="noreferrer"
-                onClick={() => setCalendarOpen(false)}
-                className="flex w-full items-center gap-2 px-4 py-3 text-sm hover:bg-muted transition-colors rounded-b-lg border-t border-border"
-              >
-                Open in Google Calendar
-              </a>
-            </div>
-          )}
-        </div>
+        {hasDates && (
+          <div className="relative">
+            <Button variant="outline" onClick={() => setCalendarOpen(!calendarOpen)}>
+              <CalendarPlus className="mr-2 h-4 w-4" /> Add to Calendar
+            </Button>
+            {calendarOpen && (
+              <div className="absolute left-0 top-12 z-10 w-52 rounded-lg border border-border bg-background shadow-md">
+                <button
+                  onClick={() => { downloadIcs({ title, startDate: start_date as string, endDate: end_date as string, url: pageUrl }); setCalendarOpen(false) }}
+                  className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm hover:bg-muted transition-colors rounded-t-lg"
+                >
+                  Download .ics (Apple / Outlook)
+                </button>
+                <a
+                  href={googleCalendarUrl({ title, startDate: start_date as string, endDate: end_date as string, description })}
+                  target="_blank" rel="noreferrer"
+                  onClick={() => setCalendarOpen(false)}
+                  className="flex w-full items-center gap-2 px-4 py-3 text-sm hover:bg-muted transition-colors rounded-b-lg border-t border-border"
+                >
+                  Open in Google Calendar
+                </a>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {banner_image && (
@@ -168,14 +181,15 @@ export default function TournamentDetailClient({ tournament }: { tournament: Tou
             <DetailRow label="Registration Deadline" value={formatDate(registration_deadline)} />
             <DetailRow label="Format"                value={formatLabel} />
             {venue && <DetailRow label="Venue"       value={venue} />}
-            <DetailRow label="Max Teams"             value={String(max_teams)} />
+            {format === 'hybrid' && stage_notes && <DetailRow label="Stages" value={stage_notes} />}
+            <DetailRow label="Max Teams"             value={max_teams != null ? String(max_teams) : 'TBD'} />
           </dl>
         </section>
 
         <section>
           <h2 className="mb-4 text-lg font-bold">Prize Pool</h2>
           <dl className="space-y-3 text-sm">
-            <DetailRow label="Cash Prize" value={`RM ${prize_pool_rm.toLocaleString()}`} />
+            <DetailRow label="Cash Prize" value={prizeLabel} />
             {additional_prizes?.length > 0 && (
               <DetailRow label="Additional" value={additional_prizes.join(', ')} />
             )}
@@ -183,24 +197,26 @@ export default function TournamentDetailClient({ tournament }: { tournament: Tou
 
           <h2 className="mb-4 mt-8 text-lg font-bold">Organiser</h2>
           <dl className="space-y-3 text-sm">
-            <DetailRow label="Name" value={organiser_name} />
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Contact</dt>
-              <dd className="text-right font-medium">
-                {wa ? (
-                  <a href={wa} target="_blank" rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-green-700 hover:underline">
-                    <MessageCircle className="h-4 w-4" />
-                    {organiser_contact}
-                    <span className="text-xs text-muted-foreground">(WhatsApp)</span>
-                  </a>
-                ) : (
-                  <a href={`mailto:${organiser_contact}`} className="text-primary hover:underline">
-                    {organiser_contact}
-                  </a>
-                )}
-              </dd>
-            </div>
+            <DetailRow label="Name" value={organiser_name ?? 'TBD'} />
+            {organiser_contact && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Contact</dt>
+                <dd className="text-right font-medium">
+                  {wa ? (
+                    <a href={wa} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-green-700 hover:underline">
+                      <MessageCircle className="h-4 w-4" />
+                      {organiser_contact}
+                      <span className="text-xs text-muted-foreground">(WhatsApp)</span>
+                    </a>
+                  ) : (
+                    <a href={`mailto:${organiser_contact}`} className="text-primary hover:underline">
+                      {organiser_contact}
+                    </a>
+                  )}
+                </dd>
+              </div>
+            )}
           </dl>
         </section>
       </div>

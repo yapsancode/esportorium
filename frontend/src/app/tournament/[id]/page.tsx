@@ -19,10 +19,15 @@ async function getTournament(id: string): Promise<Tournament | null> {
   }
 }
 
-function formatDate(d: string) {
+function formatDate(d: string | null) {
+  if (!d) return 'TBD'
   return new Date(d + 'T00:00:00').toLocaleDateString('en-MY', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
+}
+
+function prizeLabel(rm: number | null) {
+  return rm != null ? `RM ${rm.toLocaleString()}` : 'TBD'
 }
 
 export async function generateMetadata(
@@ -32,8 +37,8 @@ export async function generateMetadata(
   const tournament = await getTournament(id)
   if (!tournament) return { title: 'Tournament Not Found' }
 
-  const { title, prize_pool_rm, registration_deadline, format, banner_image } = tournament
-  const description = `A Mobile Legends tournament open to Malaysian participants. Prize pool: RM ${prize_pool_rm.toLocaleString()}. Register before ${formatDate(registration_deadline)}.`
+  const { title, prize_pool_rm, registration_deadline, banner_image } = tournament
+  const description = `A Mobile Legends tournament open to Malaysian participants. Prize pool: ${prizeLabel(prize_pool_rm)}. Register before ${formatDate(registration_deadline)}.`
   const canonicalUrl = `https://esportorium.com/tournament/${id}`
 
   return {
@@ -65,7 +70,13 @@ export default async function TournamentDetailPage(
 
   const { title, prize_pool_rm, registration_deadline, format, start_date, end_date } = tournament
   const canonicalUrl = `https://esportorium.com/tournament/${id}`
-  const description = `A Mobile Legends tournament open to Malaysian participants. Prize pool: RM ${prize_pool_rm.toLocaleString()}. Register before ${formatDate(registration_deadline)}.`
+  const description = `A Mobile Legends tournament open to Malaysian participants. Prize pool: ${prizeLabel(prize_pool_rm)}. Register before ${formatDate(registration_deadline)}.`
+
+  const attendanceMode = format === 'online'
+    ? "https://schema.org/OnlineEventAttendanceMode"
+    : format === 'hybrid'
+    ? "https://schema.org/MixedEventAttendanceMode"
+    : "https://schema.org/OfflineEventAttendanceMode"
 
   const eventSchema = {
     "@context": "https://schema.org",
@@ -73,15 +84,13 @@ export default async function TournamentDetailPage(
     "name": title,
     "description": description,
     "url": canonicalUrl,
-    "startDate": start_date,
-    "endDate": end_date,
+    ...(start_date ? { "startDate": start_date } : {}),
+    ...(end_date ? { "endDate": end_date } : {}),
     "eventStatus": "https://schema.org/EventScheduled",
-    "eventAttendanceMode": format === 'online'
-      ? "https://schema.org/OnlineEventAttendanceMode"
-      : "https://schema.org/OfflineEventAttendanceMode",
+    "eventAttendanceMode": attendanceMode,
     ...(tournament.banner_image ? { "image": tournament.banner_image } : {}),
     "location": format === 'online'
-      ? { "@type": "VirtualLocation", "url": tournament.registration_link }
+      ? { "@type": "VirtualLocation", "url": tournament.registration_link || canonicalUrl }
       : {
           "@type": "Place",
           "name": tournament.venue || tournament.state || "Malaysia",
@@ -92,14 +101,14 @@ export default async function TournamentDetailPage(
             ...(tournament.venue ? { "streetAddress": tournament.venue } : {}),
           },
         },
-    "organizer": { "@type": "Organization", "name": tournament.organiser_name },
+    "organizer": { "@type": "Organization", "name": tournament.organiser_name || "Esportorium" },
     "offers": {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "MYR",
-      "url": tournament.registration_link,
+      "url": tournament.registration_link || canonicalUrl,
       "availability": "https://schema.org/InStock",
-      "validThrough": registration_deadline,
+      ...(registration_deadline ? { "validThrough": registration_deadline } : {}),
     },
   }
 

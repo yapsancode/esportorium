@@ -25,14 +25,14 @@ interface Tournament {
   id: string
   title: string
   status: string
-  format: string
+  format: string | null
   state: string | null
-  prize_pool_rm: number
+  prize_pool_rm: number | null
   is_approved: boolean
 }
 
 interface FormState {
-  title: string; format: string; state: string; venue: string
+  title: string; format: string; state: string; venue: string; stage_notes: string
   start_date: string; end_date: string; registration_deadline: string
   prize_pool_rm: string; max_teams: string; additional_prizes: string
   organiser_name: string; organiser_contact: string; organiser_email: string
@@ -40,7 +40,7 @@ interface FormState {
 }
 
 const EMPTY_FORM: FormState = {
-  title: '', format: '', state: '', venue: '',
+  title: '', format: '', state: '', venue: '', stage_notes: '',
   start_date: '', end_date: '', registration_deadline: '',
   prize_pool_rm: '', max_teams: '', additional_prizes: '',
   organiser_name: '', organiser_contact: '', organiser_email: '',
@@ -50,8 +50,9 @@ const EMPTY_FORM: FormState = {
 function toFormValues(t: any): FormState {
   return {
     title: t.title ?? '', format: t.format ?? '', state: t.state ?? '', venue: t.venue ?? '',
+    stage_notes: t.stage_notes ?? '',
     start_date: t.start_date ?? '', end_date: t.end_date ?? '', registration_deadline: t.registration_deadline ?? '',
-    prize_pool_rm: String(t.prize_pool_rm ?? ''), max_teams: String(t.max_teams ?? ''),
+    prize_pool_rm: t.prize_pool_rm != null ? String(t.prize_pool_rm) : '', max_teams: t.max_teams != null ? String(t.max_teams) : '',
     additional_prizes: (t.additional_prizes ?? []).join(', '),
     organiser_name: t.organiser_name ?? '', organiser_contact: t.organiser_contact ?? '',
     organiser_email: t.organiser_email ?? '', registration_link: t.registration_link ?? '',
@@ -59,14 +60,18 @@ function toFormValues(t: any): FormState {
   }
 }
 
+// Only `title` is required — this form doubles as the manual-seeding tool for
+// tournaments scraped from other sources, where most details aren't known yet.
 function toPayload(form: FormState) {
   return {
-    title: form.title, format: form.format, state: form.state || null, venue: form.venue || null,
-    start_date: form.start_date, end_date: form.end_date, registration_deadline: form.registration_deadline,
-    prize_pool_rm: parseInt(form.prize_pool_rm, 10), max_teams: parseInt(form.max_teams, 10),
+    title: form.title, format: form.format || null, state: form.state || null, venue: form.venue || null,
+    stage_notes: form.stage_notes || null,
+    start_date: form.start_date || null, end_date: form.end_date || null, registration_deadline: form.registration_deadline || null,
+    prize_pool_rm: form.prize_pool_rm ? parseInt(form.prize_pool_rm, 10) : null,
+    max_teams: form.max_teams ? parseInt(form.max_teams, 10) : null,
     additional_prizes: form.additional_prizes ? form.additional_prizes.split(',').map(s => s.trim()).filter(Boolean) : [],
-    organiser_name: form.organiser_name, organiser_contact: form.organiser_contact,
-    organiser_email: form.organiser_email, registration_link: form.registration_link,
+    organiser_name: form.organiser_name || null, organiser_contact: form.organiser_contact || null,
+    organiser_email: form.organiser_email || null, registration_link: form.registration_link || null,
     banner_image: form.banner_image || null,
   }
 }
@@ -210,8 +215,8 @@ function AdminTournamentsContent() {
                         <TableCell className="font-medium">{t.title}</TableCell>
                         <TableCell><Badge variant={t.status as any}>{t.status.charAt(0).toUpperCase() + t.status.slice(1)}</Badge></TableCell>
                         <TableCell>{t.is_approved ? <span className="text-green-600 font-medium">Yes</span> : <span className="text-muted-foreground">Pending</span>}</TableCell>
-                        <TableCell>{t.format === 'offline' && t.state ? `Offline · ${t.state}` : t.format.charAt(0).toUpperCase() + t.format.slice(1)}</TableCell>
-                        <TableCell>RM {t.prize_pool_rm.toLocaleString()}</TableCell>
+                        <TableCell>{formatCell(t)}</TableCell>
+                        <TableCell>{t.prize_pool_rm != null ? `RM ${t.prize_pool_rm.toLocaleString()}` : 'TBD'}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(t)}><Pencil className="h-3.5 w-3.5" /></Button>
@@ -233,13 +238,17 @@ function AdminTournamentsContent() {
           <DialogHeader><DialogTitle>{editing ? 'Edit Tournament' : 'Add Tournament'}</DialogTitle></DialogHeader>
           <form onSubmit={handleSave} className="space-y-4 py-2">
             <Field label="Tournament Name" id="d-title"><Input id="d-title" required maxLength={200} value={form.title} onChange={set('title')} /></Field>
-            <Field label="Format" id="d-format">
-              <Select required value={form.format} onValueChange={setSelect('format')}>
+            <Field label="Format (optional)" id="d-format">
+              <Select value={form.format} onValueChange={setSelect('format')}>
                 <SelectTrigger id="d-format"><SelectValue placeholder="Select format" /></SelectTrigger>
-                <SelectContent><SelectItem value="online">Online</SelectItem><SelectItem value="offline">Offline</SelectItem></SelectContent>
+                <SelectContent>
+                  <SelectItem value="online">Online</SelectItem>
+                  <SelectItem value="offline">Offline</SelectItem>
+                  <SelectItem value="hybrid">Hybrid (online + offline)</SelectItem>
+                </SelectContent>
               </Select>
             </Field>
-            {form.format === 'offline' && (
+            {(form.format === 'offline' || form.format === 'hybrid') && (
               <>
                 <Field label="State" id="d-state">
                   <Select required value={form.state} onValueChange={setSelect('state')}>
@@ -250,17 +259,22 @@ function AdminTournamentsContent() {
                 <Field label="Venue (optional)" id="d-venue"><Input id="d-venue" maxLength={300} value={form.venue} onChange={set('venue')} /></Field>
               </>
             )}
+            {form.format === 'hybrid' && (
+              <Field label="Stage Breakdown (optional)" id="d-stage-notes">
+                <Input id="d-stage-notes" placeholder="e.g. Group stage online, playoffs offline in KL" maxLength={300} value={form.stage_notes} onChange={set('stage_notes')} />
+              </Field>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Start Date" id="d-start"><Input id="d-start" type="date" required value={form.start_date} onChange={set('start_date')} /></Field>
-              <Field label="End Date" id="d-end"><Input id="d-end" type="date" required value={form.end_date} onChange={set('end_date')} /></Field>
+              <Field label="Start Date (optional)" id="d-start"><Input id="d-start" type="date" value={form.start_date} onChange={set('start_date')} /></Field>
+              <Field label="End Date (optional)" id="d-end"><Input id="d-end" type="date" value={form.end_date} onChange={set('end_date')} /></Field>
             </div>
-            <Field label="Registration Deadline" id="d-deadline"><Input id="d-deadline" type="date" required value={form.registration_deadline} onChange={set('registration_deadline')} /></Field>
+            <Field label="Registration Deadline (optional)" id="d-deadline"><Input id="d-deadline" type="date" value={form.registration_deadline} onChange={set('registration_deadline')} /></Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Prize Pool (RM)" id="d-prize"><Input id="d-prize" type="number" min={0} required value={form.prize_pool_rm} onChange={set('prize_pool_rm')} /></Field>
-              <Field label="Max Teams" id="d-teams"><Input id="d-teams" type="number" min={2} required value={form.max_teams} onChange={set('max_teams')} /></Field>
+              <Field label="Prize Pool (RM, optional)" id="d-prize"><Input id="d-prize" type="number" min={0} value={form.prize_pool_rm} onChange={set('prize_pool_rm')} /></Field>
+              <Field label="Max Teams (optional)" id="d-teams"><Input id="d-teams" type="number" min={2} value={form.max_teams} onChange={set('max_teams')} /></Field>
             </div>
             <Field label="Additional Prizes (optional, comma separated)" id="d-extras"><Input id="d-extras" placeholder="e.g. Trophy, Jersey" value={form.additional_prizes} onChange={set('additional_prizes')} /></Field>
-            <Field label="Registration Link" id="d-reglink"><Input id="d-reglink" type="url" required value={form.registration_link} onChange={set('registration_link')} /></Field>
+            <Field label="Registration Link (optional)" id="d-reglink"><Input id="d-reglink" type="url" value={form.registration_link} onChange={set('registration_link')} /></Field>
             <Field label="Banner Image (optional)" id="d-banner-file">
               {form.banner_image && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -272,11 +286,11 @@ function AdminTournamentsContent() {
               <Input id="d-banner" type="url" placeholder="…or paste an image URL" className="mt-2" value={form.banner_image} onChange={set('banner_image')} />
             </Field>
             <div className="border-t pt-4">
-              <p className="mb-3 font-semibold text-sm">Organiser Info</p>
+              <p className="mb-3 font-semibold text-sm">Organiser Info (optional)</p>
               <div className="space-y-4">
-                <Field label="Organiser Name" id="d-orgname"><Input id="d-orgname" required maxLength={100} value={form.organiser_name} onChange={set('organiser_name')} /></Field>
-                <Field label="Contact (WhatsApp / email)" id="d-orgcontact"><Input id="d-orgcontact" required maxLength={100} value={form.organiser_contact} onChange={set('organiser_contact')} /></Field>
-                <Field label="Organiser Email" id="d-orgemail"><Input id="d-orgemail" type="email" required value={form.organiser_email} onChange={set('organiser_email')} /></Field>
+                <Field label="Organiser Name" id="d-orgname"><Input id="d-orgname" maxLength={100} value={form.organiser_name} onChange={set('organiser_name')} /></Field>
+                <Field label="Contact (WhatsApp / email)" id="d-orgcontact"><Input id="d-orgcontact" maxLength={100} value={form.organiser_contact} onChange={set('organiser_contact')} /></Field>
+                <Field label="Organiser Email" id="d-orgemail"><Input id="d-orgemail" type="email" value={form.organiser_email} onChange={set('organiser_email')} /></Field>
               </div>
             </div>
             {formError && <p className="text-sm text-red-500">{formError}</p>}
@@ -297,6 +311,14 @@ export default function AdminTournamentsPage() {
       <AdminTournamentsContent />
     </ProtectedRoute>
   )
+}
+
+function formatCell(t: Tournament) {
+  if (!t.format) return 'TBD'
+  if ((t.format === 'offline' || t.format === 'hybrid') && t.state) {
+    return `${t.format.charAt(0).toUpperCase() + t.format.slice(1)} · ${t.state}`
+  }
+  return t.format.charAt(0).toUpperCase() + t.format.slice(1)
 }
 
 function Field({ label, id, children }: { label: string; id: string; children: React.ReactNode }) {

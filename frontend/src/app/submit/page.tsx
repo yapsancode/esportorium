@@ -25,6 +25,7 @@ const INITIAL = {
   format: '',
   state: '',
   venue: '',
+  stage_notes: '',
   start_date: '',
   end_date: '',
   registration_deadline: '',
@@ -112,6 +113,7 @@ export default function Submit() {
           : [],
         state: form.state || null,
         venue: form.venue || null,
+        stage_notes: form.stage_notes || null,
         banner_image: form.banner_image || null,
         turnstile_token: turnstileToken,
       }
@@ -138,6 +140,17 @@ export default function Submit() {
           <p className="mt-3 text-muted-foreground">
             We'll review your tournament within 1–2 business days and notify you at the email you provided.
           </p>
+          <Button
+            className="mt-8"
+            onClick={() => {
+              setForm(INITIAL)
+              setTurnstileToken('')
+              setError('')
+              setSubmitted(false)
+            }}
+          >
+            Submit Another Tournament
+          </Button>
         </main>
         <Footer />
       </div>
@@ -185,11 +198,12 @@ export default function Submit() {
                   <SelectContent>
                     <SelectItem value="online">Online</SelectItem>
                     <SelectItem value="offline">Offline</SelectItem>
+                    <SelectItem value="hybrid">Hybrid (online + offline)</SelectItem>
                   </SelectContent>
                 </Select>
               </FormField>
 
-              {form.format === 'offline' && (
+              {(form.format === 'offline' || form.format === 'hybrid') && (
                 <>
                   <FormField label="State" id="state">
                     <Select required value={form.state} onValueChange={setSelect('state')}>
@@ -208,6 +222,12 @@ export default function Submit() {
                     <Input id="venue" placeholder="e.g. Berjaya Times Square, KL" maxLength={300} value={form.venue} onChange={set('venue')} />
                   </FormField>
                 </>
+              )}
+
+              {form.format === 'hybrid' && (
+                <FormField label="Stage Breakdown (optional)" id="stage_notes">
+                  <Input id="stage_notes" placeholder="e.g. Group stage online, playoffs offline in KL" maxLength={300} value={form.stage_notes} onChange={set('stage_notes')} />
+                </FormField>
               )}
 
               <div className="grid gap-4 sm:grid-cols-2">

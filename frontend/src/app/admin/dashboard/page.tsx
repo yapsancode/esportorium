@@ -66,7 +66,9 @@ function AdminDashboardContent() {
   }
 
   function formatLabel(t: Submission) {
-    if (t.format === 'offline' && t.state) return `Offline · ${t.state}`
+    if ((t.format === 'offline' || t.format === 'hybrid') && t.state) {
+      return `${t.format.charAt(0).toUpperCase() + t.format.slice(1)} · ${t.state}`
+    }
     return t.format.charAt(0).toUpperCase() + t.format.slice(1)
   }
 

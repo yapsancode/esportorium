@@ -2,17 +2,18 @@ export interface Tournament {
   id: string
   title: string
   status: string
-  format: string
+  format: 'online' | 'offline' | 'hybrid' | null
   state: string | null
   venue: string | null
-  start_date: string
-  end_date: string
-  registration_deadline: string
-  prize_pool_rm: number
+  stage_notes: string | null
+  start_date: string | null
+  end_date: string | null
+  registration_deadline: string | null
+  prize_pool_rm: number | null
   additional_prizes: string[]
-  max_teams: number
-  organiser_name: string
-  organiser_contact: string
-  registration_link: string
+  max_teams: number | null
+  organiser_name: string | null
+  organiser_contact: string | null
+  registration_link: string | null
   banner_image: string | null
 }
