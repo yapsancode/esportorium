@@ -1,6 +1,11 @@
 # Minimal ruff config — useful checks without overwhelming the project on day one.
 line-length = 120
 
+# Alembic's revision template always imports `op`/`sa` regardless of whether a
+# given migration ends up using them (e.g. no-op or data-only migrations) —
+# not worth hand-editing generated files just to satisfy the linter.
+exclude = ["alembic/versions"]
+
 [lint]
 # E = pycodestyle, F = pyflakes (unused imports/vars, undefined names).
 select = ["E", "F"]
