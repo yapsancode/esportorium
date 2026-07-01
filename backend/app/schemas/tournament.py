@@ -4,6 +4,26 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
+def _reject_html(v: str) -> str:
+    """Strip whitespace and reject obvious HTML/script injection."""
+    v = v.strip()
+    for bad in ("<script", "javascript:", "onerror=", "onload="):
+        if bad.lower() in v.lower():
+            raise ValueError("Input contains disallowed content")
+    return v
+
+
+class PrizeBreakdownItem(BaseModel):
+    """One row of the cash prize split, e.g. {"placement": "Champion", "reward": "RM 5,000"}."""
+    placement: str = Field(..., min_length=1, max_length=50, strip_whitespace=True)
+    reward:    str = Field(..., min_length=1, max_length=100, strip_whitespace=True)
+
+    @field_validator("placement", "reward", mode="before")
+    @classmethod
+    def _clean(cls, v: str) -> str:
+        return _reject_html(str(v))
+
+
 # ─── Shared base ─────────────────────────────────────────────────────────────
 # Only `title` is required here. Everything else is optional so admins can
 # manually seed tournaments with incomplete info (e.g. scraped listings).
@@ -16,11 +36,13 @@ class TournamentBase(BaseModel):
     state:                 Optional[str] = Field(default=None, max_length=100)
     venue:                 Optional[str] = Field(default=None, max_length=300, strip_whitespace=True)
     stage_notes:           Optional[str] = Field(default=None, max_length=300, strip_whitespace=True)
+    description:           Optional[str] = Field(default=None, max_length=2000, strip_whitespace=True)
     start_date:            Optional[date] = None
     end_date:              Optional[date] = None
     registration_deadline: Optional[date] = None
     prize_pool_rm:         Optional[int] = Field(default=None, ge=0, le=10_000_000)
     additional_prizes:     list[str] = Field(default_factory=list, max_length=10)
+    prize_breakdown:       list[PrizeBreakdownItem] = Field(default_factory=list, max_length=15)
     max_teams:             Optional[int] = Field(default=None, ge=2, le=10_000)
     organiser_name:        Optional[str] = Field(default=None, max_length=100, strip_whitespace=True)
     organiser_contact:     Optional[str] = Field(default=None, max_length=100, strip_whitespace=True)
@@ -29,17 +51,12 @@ class TournamentBase(BaseModel):
 
     # ── Field validators ──────────────────────────────────────────────────────
 
-    @field_validator("title", "organiser_name", "organiser_contact", mode="before")
+    @field_validator("title", "organiser_name", "organiser_contact", "description", mode="before")
     @classmethod
     def strip_and_no_html(cls, v: Optional[str]) -> Optional[str]:
-        """Strip whitespace and reject obvious HTML/script injection."""
         if v is None:
             return v
-        v = v.strip()
-        for bad in ("<script", "javascript:", "onerror=", "onload="):
-            if bad.lower() in v.lower():
-                raise ValueError("Input contains disallowed content")
-        return v
+        return _reject_html(str(v))
 
     @field_validator("additional_prizes", mode="before")
     @classmethod
@@ -112,11 +129,13 @@ class TournamentUpdate(BaseModel):
     state:                 Optional[str]                      = None
     venue:                 Optional[str]                      = None
     stage_notes:           Optional[str]                      = None
+    description:           Optional[str]                      = Field(default=None, max_length=2000)
     start_date:            Optional[date]                     = None
     end_date:              Optional[date]                     = None
     registration_deadline: Optional[date]                     = None
     prize_pool_rm:         Optional[int]                      = Field(default=None, ge=0)
     additional_prizes:     Optional[list[str]]                = None
+    prize_breakdown:       Optional[list[PrizeBreakdownItem]] = None
     max_teams:             Optional[int]                      = Field(default=None, ge=2)
     organiser_name:        Optional[str]                      = Field(default=None, max_length=100)
     organiser_contact:     Optional[str]                      = Field(default=None, max_length=100)

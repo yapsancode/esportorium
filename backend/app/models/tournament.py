@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, date
-from sqlalchemy import Column, String, Integer, Boolean, Date, DateTime, Enum, ARRAY
+from sqlalchemy import Column, String, Integer, Boolean, Date, DateTime, Enum, ARRAY, Text, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 
@@ -15,11 +15,13 @@ class Tournament(Base):
     state = Column(String, nullable=True, index=True)
     venue = Column(String, nullable=True)
     stage_notes = Column(String, nullable=True)  # e.g. "Group stage online, playoffs offline in KL"
+    description = Column(Text, nullable=True)  # rules, custom requirements, etc.
     start_date = Column(Date, nullable=True, index=True)
     end_date = Column(Date, nullable=True)
     registration_deadline = Column(Date, nullable=True)
     prize_pool_rm = Column(Integer, nullable=True)
     additional_prizes = Column(ARRAY(String), default=[])
+    prize_breakdown = Column(JSON, default=list)  # e.g. [{"placement": "Champion", "reward": "RM 5,000"}]
     max_teams = Column(Integer, nullable=True)
     organiser_name = Column(String, nullable=True)
     organiser_contact = Column(String, nullable=True)

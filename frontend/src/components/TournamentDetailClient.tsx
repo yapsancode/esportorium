@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Share2, ExternalLink, ChevronDown, ChevronUp, CalendarPlus, MessageCircle, Check, ArrowLeft } from 'lucide-react'
+import { DEFAULT_BANNER } from '@/lib/utils'
 
 function formatDate(d: string | null) {
   if (!d) return 'TBD'
@@ -60,9 +61,9 @@ export default function TournamentDetailClient({ tournament }: { tournament: Tou
   const [calendarOpen, setCalendarOpen]     = useState(false)
 
   const {
-    title, status, format, state, venue, stage_notes,
+    title, status, format, state, venue, stage_notes, description,
     start_date, end_date, registration_deadline,
-    prize_pool_rm, additional_prizes, max_teams,
+    prize_pool_rm, additional_prizes, prize_breakdown, max_teams,
     organiser_name, organiser_contact,
     registration_link, banner_image,
   } = tournament
@@ -72,8 +73,8 @@ export default function TournamentDetailClient({ tournament }: { tournament: Tou
     : format === 'hybrid' ? `Hybrid${state ? ` · ${state}` : ''}`
     : format === 'offline' ? `Offline${state ? ` · ${state}` : ''}`
     : 'Format TBD'
-  const prizeLabel   = prize_pool_rm != null ? `RM ${prize_pool_rm.toLocaleString()}` : 'TBD'
-  const description  = `A Mobile Legends tournament open to Malaysian participants. Prize pool: ${prizeLabel}. Register before ${formatDate(registration_deadline)}.`
+  const prizeLabel     = prize_pool_rm != null ? `RM ${prize_pool_rm.toLocaleString()}` : 'TBD'
+  const summaryText    = `A Mobile Legends tournament open to Malaysian participants. Prize pool: ${prizeLabel}. Register before ${formatDate(registration_deadline)}.`
   const wa           = whatsAppUrl(organiser_contact)
   const hasDates     = Boolean(start_date && end_date)
 
@@ -135,7 +136,7 @@ export default function TournamentDetailClient({ tournament }: { tournament: Tou
                   Download .ics (Apple / Outlook)
                 </button>
                 <a
-                  href={googleCalendarUrl({ title, startDate: start_date as string, endDate: end_date as string, description })}
+                  href={googleCalendarUrl({ title, startDate: start_date as string, endDate: end_date as string, description: summaryText })}
                   target="_blank" rel="noreferrer"
                   onClick={() => setCalendarOpen(false)}
                   className="flex w-full items-center gap-2 px-4 py-3 text-sm hover:bg-muted transition-colors rounded-b-lg border-t border-border"
@@ -148,29 +149,34 @@ export default function TournamentDetailClient({ tournament }: { tournament: Tou
         )}
       </div>
 
-      {banner_image && (
-        <div className="mt-8">
-          <button
-            onClick={() => setBannerExpanded(!bannerExpanded)}
-            className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Banner {bannerExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
-          {bannerExpanded && (
-            <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-muted">
-              <Image
-                src={banner_image}
-                alt={`${title} banner`}
-                fill
-                sizes="(max-width: 768px) 100vw, 768px"
-                className="object-cover"
-              />
-            </div>
-          )}
-        </div>
-      )}
+      <div className="mt-8">
+        <button
+          onClick={() => setBannerExpanded(!bannerExpanded)}
+          className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Banner {bannerExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </button>
+        {bannerExpanded && (
+          <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-muted">
+            <Image
+              src={banner_image || DEFAULT_BANNER}
+              alt={`${title} banner`}
+              fill
+              sizes="(max-width: 768px) 100vw, 768px"
+              className="object-cover"
+            />
+          </div>
+        )}
+      </div>
 
       <Separator className="my-8" />
+
+      {description && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-lg font-bold">Description</h2>
+          <p className="whitespace-pre-line text-sm text-muted-foreground">{description}</p>
+        </section>
+      )}
 
       <div className="grid gap-8 sm:grid-cols-2">
         <section>
@@ -190,6 +196,9 @@ export default function TournamentDetailClient({ tournament }: { tournament: Tou
           <h2 className="mb-4 text-lg font-bold">Prize Pool</h2>
           <dl className="space-y-3 text-sm">
             <DetailRow label="Cash Prize" value={prizeLabel} />
+            {prize_breakdown?.map((item, i) => (
+              <DetailRow key={i} label={item.placement} value={item.reward} />
+            ))}
             {additional_prizes?.length > 0 && (
               <DetailRow label="Additional" value={additional_prizes.join(', ')} />
             )}

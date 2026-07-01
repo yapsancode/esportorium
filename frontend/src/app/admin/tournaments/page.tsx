@@ -12,8 +12,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import PrizeBreakdownEditor from '@/components/PrizeBreakdownEditor'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { adminFetch, uploadBanner, ApiError } from '@/lib/api'
+import type { PrizeBreakdownItem } from '@/lib/types'
 
 const STATES = [
   'Kuala Lumpur', 'Selangor', 'Johor', 'Penang', 'Sabah', 'Sarawak',
@@ -32,7 +35,7 @@ interface Tournament {
 }
 
 interface FormState {
-  title: string; format: string; state: string; venue: string; stage_notes: string
+  title: string; format: string; state: string; venue: string; stage_notes: string; description: string
   start_date: string; end_date: string; registration_deadline: string
   prize_pool_rm: string; max_teams: string; additional_prizes: string
   organiser_name: string; organiser_contact: string; organiser_email: string
@@ -40,7 +43,7 @@ interface FormState {
 }
 
 const EMPTY_FORM: FormState = {
-  title: '', format: '', state: '', venue: '', stage_notes: '',
+  title: '', format: '', state: '', venue: '', stage_notes: '', description: '',
   start_date: '', end_date: '', registration_deadline: '',
   prize_pool_rm: '', max_teams: '', additional_prizes: '',
   organiser_name: '', organiser_contact: '', organiser_email: '',
@@ -50,7 +53,7 @@ const EMPTY_FORM: FormState = {
 function toFormValues(t: any): FormState {
   return {
     title: t.title ?? '', format: t.format ?? '', state: t.state ?? '', venue: t.venue ?? '',
-    stage_notes: t.stage_notes ?? '',
+    stage_notes: t.stage_notes ?? '', description: t.description ?? '',
     start_date: t.start_date ?? '', end_date: t.end_date ?? '', registration_deadline: t.registration_deadline ?? '',
     prize_pool_rm: t.prize_pool_rm != null ? String(t.prize_pool_rm) : '', max_teams: t.max_teams != null ? String(t.max_teams) : '',
     additional_prizes: (t.additional_prizes ?? []).join(', '),
@@ -62,14 +65,15 @@ function toFormValues(t: any): FormState {
 
 // Only `title` is required — this form doubles as the manual-seeding tool for
 // tournaments scraped from other sources, where most details aren't known yet.
-function toPayload(form: FormState) {
+function toPayload(form: FormState, prizeBreakdown: PrizeBreakdownItem[]) {
   return {
     title: form.title, format: form.format || null, state: form.state || null, venue: form.venue || null,
-    stage_notes: form.stage_notes || null,
+    stage_notes: form.stage_notes || null, description: form.description || null,
     start_date: form.start_date || null, end_date: form.end_date || null, registration_deadline: form.registration_deadline || null,
     prize_pool_rm: form.prize_pool_rm ? parseInt(form.prize_pool_rm, 10) : null,
     max_teams: form.max_teams ? parseInt(form.max_teams, 10) : null,
     additional_prizes: form.additional_prizes ? form.additional_prizes.split(',').map(s => s.trim()).filter(Boolean) : [],
+    prize_breakdown: prizeBreakdown.filter(item => item.placement.trim() && item.reward.trim()),
     organiser_name: form.organiser_name || null, organiser_contact: form.organiser_contact || null,
     organiser_email: form.organiser_email || null, registration_link: form.registration_link || null,
     banner_image: form.banner_image || null,
@@ -85,6 +89,7 @@ function AdminTournamentsContent() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Tournament | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [prizeBreakdown, setPrizeBreakdown] = useState<PrizeBreakdownItem[]>([])
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
   const [bannerUploading, setBannerUploading] = useState(false)
@@ -110,11 +115,17 @@ function AdminTournamentsContent() {
 
   useEffect(() => { loadTournaments() }, [])
 
-  function openAdd() { setEditing(null); setForm(EMPTY_FORM); setFormError(''); setDialogOpen(true) }
-  function openEdit(t: Tournament) { setEditing(t); setForm(toFormValues(t)); setFormError(''); setDialogOpen(true) }
+  function openAdd() { setEditing(null); setForm(EMPTY_FORM); setPrizeBreakdown([]); setFormError(''); setDialogOpen(true) }
+  function openEdit(t: Tournament) {
+    setEditing(t)
+    setForm(toFormValues(t))
+    setPrizeBreakdown((t as any).prize_breakdown ?? [])
+    setFormError('')
+    setDialogOpen(true)
+  }
 
   function set(field: keyof FormState) {
-    return (e: React.ChangeEvent<HTMLInputElement>) =>
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm(prev => ({ ...prev, [field]: e.target.value }))
   }
   function setSelect(field: keyof FormState) {
@@ -149,7 +160,7 @@ function AdminTournamentsContent() {
     setSaving(true)
     setFormError('')
     try {
-      const payload = toPayload(form)
+      const payload = toPayload(form, prizeBreakdown)
       if (editing) {
         const updated = await adminFetch(`/api/admin/tournaments/${editing.id}`, { method: 'PUT', body: JSON.stringify(payload) })
         setTournaments(prev => prev.map(t => t.id === editing.id ? updated : t))
@@ -238,6 +249,9 @@ function AdminTournamentsContent() {
           <DialogHeader><DialogTitle>{editing ? 'Edit Tournament' : 'Add Tournament'}</DialogTitle></DialogHeader>
           <form onSubmit={handleSave} className="space-y-4 py-2">
             <Field label="Tournament Name" id="d-title"><Input id="d-title" required maxLength={200} value={form.title} onChange={set('title')} /></Field>
+            <Field label="Description / Rules (optional)" id="d-description">
+              <Textarea id="d-description" maxLength={2000} rows={4} value={form.description} onChange={set('description')} />
+            </Field>
             <Field label="Format (optional)" id="d-format">
               <Select value={form.format} onValueChange={setSelect('format')}>
                 <SelectTrigger id="d-format"><SelectValue placeholder="Select format" /></SelectTrigger>
@@ -274,6 +288,9 @@ function AdminTournamentsContent() {
               <Field label="Max Teams (optional)" id="d-teams"><Input id="d-teams" type="number" min={2} value={form.max_teams} onChange={set('max_teams')} /></Field>
             </div>
             <Field label="Additional Prizes (optional, comma separated)" id="d-extras"><Input id="d-extras" placeholder="e.g. Trophy, Jersey" value={form.additional_prizes} onChange={set('additional_prizes')} /></Field>
+            <Field label="Prize Breakdown (optional)" id="d-prize-breakdown">
+              <PrizeBreakdownEditor items={prizeBreakdown} onChange={setPrizeBreakdown} />
+            </Field>
             <Field label="Registration Link (optional)" id="d-reglink"><Input id="d-reglink" type="url" value={form.registration_link} onChange={set('registration_link')} /></Field>
             <Field label="Banner Image (optional)" id="d-banner-file">
               {form.banner_image && (

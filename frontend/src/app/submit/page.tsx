@@ -9,8 +9,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
+import PrizeBreakdownEditor from '@/components/PrizeBreakdownEditor'
 import { AlertCircle, ShieldCheck } from 'lucide-react'
 import { apiFetch, uploadBanner } from '@/lib/api'
+import type { PrizeBreakdownItem } from '@/lib/types'
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'
 
@@ -26,6 +29,7 @@ const INITIAL = {
   state: '',
   venue: '',
   stage_notes: '',
+  description: '',
   start_date: '',
   end_date: '',
   registration_deadline: '',
@@ -41,6 +45,7 @@ const INITIAL = {
 
 export default function Submit() {
   const [form, setForm] = useState(INITIAL)
+  const [prizeBreakdown, setPrizeBreakdown] = useState<PrizeBreakdownItem[]>([])
   const [turnstileToken, setTurnstileToken] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -49,7 +54,7 @@ export default function Submit() {
   const [bannerError, setBannerError] = useState('')
 
   function set(field: string) {
-    return (e: React.ChangeEvent<HTMLInputElement>) =>
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm(prev => ({ ...prev, [field]: e.target.value }))
   }
 
@@ -114,6 +119,8 @@ export default function Submit() {
         state: form.state || null,
         venue: form.venue || null,
         stage_notes: form.stage_notes || null,
+        description: form.description || null,
+        prize_breakdown: prizeBreakdown.filter(item => item.placement.trim() && item.reward.trim()),
         banner_image: form.banner_image || null,
         turnstile_token: turnstileToken,
       }
@@ -144,6 +151,7 @@ export default function Submit() {
             className="mt-8"
             onClick={() => {
               setForm(INITIAL)
+              setPrizeBreakdown([])
               setTurnstileToken('')
               setError('')
               setSubmitted(false)
@@ -188,6 +196,17 @@ export default function Submit() {
 
               <FormField label="Tournament Name" id="title">
                 <Input id="title" placeholder="e.g. ML Warriors Open 2025" maxLength={200} required value={form.title} onChange={set('title')} />
+              </FormField>
+
+              <FormField label="Description / Rules (optional)" id="description">
+                <Textarea
+                  id="description"
+                  placeholder="e.g. Open to Malaysian players only. Must be Mythic rank or above. Bring your own device."
+                  maxLength={2000}
+                  rows={4}
+                  value={form.description}
+                  onChange={set('description')}
+                />
               </FormField>
 
               <FormField label="Format" id="format">
@@ -254,6 +273,10 @@ export default function Submit() {
 
               <FormField label="Additional Prizes (optional)" id="additional_prizes">
                 <Input id="additional_prizes" placeholder="e.g. Trophy, Jersey (comma separated)" value={form.additional_prizes} onChange={set('additional_prizes')} />
+              </FormField>
+
+              <FormField label="Prize Breakdown (optional)" id="prize_breakdown">
+                <PrizeBreakdownEditor items={prizeBreakdown} onChange={setPrizeBreakdown} />
               </FormField>
 
               <FormField label="Registration Link" id="registration_link">

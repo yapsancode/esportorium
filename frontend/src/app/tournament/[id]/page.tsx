@@ -6,6 +6,9 @@ import JsonLd from '@/components/JsonLd'
 import TournamentDetailClient from '@/components/TournamentDetailClient'
 import { serverFetch } from '@/lib/api'
 import type { Tournament } from '@/lib/types'
+import { DEFAULT_BANNER } from '@/lib/utils'
+
+const ABSOLUTE_DEFAULT_BANNER = `https://esportorium.com${DEFAULT_BANNER}`
 
 
 async function getTournament(id: string): Promise<Tournament | null> {
@@ -38,8 +41,10 @@ export async function generateMetadata(
   if (!tournament) return { title: 'Tournament Not Found' }
 
   const { title, prize_pool_rm, registration_deadline, banner_image } = tournament
-  const description = `A Mobile Legends tournament open to Malaysian participants. Prize pool: ${prizeLabel(prize_pool_rm)}. Register before ${formatDate(registration_deadline)}.`
+  const description = tournament.description
+    || `A Mobile Legends tournament open to Malaysian participants. Prize pool: ${prizeLabel(prize_pool_rm)}. Register before ${formatDate(registration_deadline)}.`
   const canonicalUrl = `https://esportorium.com/tournament/${id}`
+  const ogImage = banner_image || ABSOLUTE_DEFAULT_BANNER
 
   return {
     title,
@@ -50,13 +55,13 @@ export async function generateMetadata(
       title: `${title} — Esportorium`,
       description,
       type: 'website',
-      ...(banner_image ? { images: [{ url: banner_image, width: 1280, height: 720, alt: title }] } : {}),
+      images: [{ url: ogImage, width: 1920, height: 1080, alt: title }],
     },
     twitter: {
-      card: banner_image ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title: `${title} — Esportorium`,
       description,
-      ...(banner_image ? { images: [banner_image] } : {}),
+      images: [ogImage],
     },
   }
 }
@@ -70,7 +75,8 @@ export default async function TournamentDetailPage(
 
   const { title, prize_pool_rm, registration_deadline, format, start_date, end_date } = tournament
   const canonicalUrl = `https://esportorium.com/tournament/${id}`
-  const description = `A Mobile Legends tournament open to Malaysian participants. Prize pool: ${prizeLabel(prize_pool_rm)}. Register before ${formatDate(registration_deadline)}.`
+  const description = tournament.description
+    || `A Mobile Legends tournament open to Malaysian participants. Prize pool: ${prizeLabel(prize_pool_rm)}. Register before ${formatDate(registration_deadline)}.`
 
   const attendanceMode = format === 'online'
     ? "https://schema.org/OnlineEventAttendanceMode"
@@ -88,7 +94,7 @@ export default async function TournamentDetailPage(
     ...(end_date ? { "endDate": end_date } : {}),
     "eventStatus": "https://schema.org/EventScheduled",
     "eventAttendanceMode": attendanceMode,
-    ...(tournament.banner_image ? { "image": tournament.banner_image } : {}),
+    "image": tournament.banner_image || ABSOLUTE_DEFAULT_BANNER,
     "location": format === 'online'
       ? { "@type": "VirtualLocation", "url": tournament.registration_link || canonicalUrl }
       : {

@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { LayoutGrid, List, Wifi, MapPin } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, DEFAULT_BANNER } from '@/lib/utils'
 
 const STATES = [
   'Kuala Lumpur', 'Selangor', 'Johor', 'Penang', 'Sabah', 'Sarawak',
@@ -231,7 +231,7 @@ function TournamentCard({ tournament, viewMode }: { tournament: Tournament; view
         <Card className="overflow-hidden transition-shadow hover:shadow-md cursor-pointer">
           <div className="flex items-center gap-4 p-4">
             <div className="relative h-16 w-24 shrink-0 rounded-md bg-muted overflow-hidden">
-              {banner_image && <Image src={banner_image} alt={title} fill sizes="96px" className="object-cover" />}
+              <Image src={banner_image || DEFAULT_BANNER} alt={title} fill sizes="96px" className="object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
@@ -258,7 +258,7 @@ function TournamentCard({ tournament, viewMode }: { tournament: Tournament; view
     <Link href={`/tournament/${id}`}>
       <Card className="overflow-hidden transition-shadow hover:shadow-md cursor-pointer">
         <div className="relative aspect-video w-full bg-muted overflow-hidden">
-          {banner_image && <Image src={banner_image} alt={title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" />}
+          <Image src={banner_image || DEFAULT_BANNER} alt={title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" />
         </div>
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
