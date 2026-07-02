@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.limiter import limiter
-from app.routers import tournaments, admin, upload
+from app.routers import tournaments, admin, upload, organiser
 
 # Schema is managed by Alembic (see backend/alembic/) — run `alembic upgrade head`
 # to apply migrations. No create_all() here; it would create tables outside
@@ -33,6 +33,7 @@ app.add_middleware(
 app.include_router(tournaments.router)
 app.include_router(admin.router)
 app.include_router(upload.router)
+app.include_router(organiser.router)
 
 
 @app.get("/health")

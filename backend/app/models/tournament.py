@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime, date
-from sqlalchemy import Column, String, Integer, Boolean, Date, DateTime, Enum, ARRAY, Text, JSON
+from sqlalchemy import Column, String, Integer, Boolean, Date, DateTime, Enum, ARRAY, Text, JSON, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 
@@ -31,6 +32,13 @@ class Tournament(Base):
     is_approved = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
+    # Tenant owner. Null => legacy public submission (admin-managed, as today).
+    # Set => owned by a logged-in organiser; every organiser-scoped query filters
+    # on this column. The existing organiser_name/contact/email text fields stay
+    # for legacy rows and are never used to authorise access.
+    organiser_id = Column(UUID(as_uuid=True), ForeignKey("organisers.id"), nullable=True, index=True)
+    organiser = relationship("Organiser", back_populates="tournaments")
 
     @property
     def status(self) -> str:

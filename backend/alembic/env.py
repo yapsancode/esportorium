@@ -10,7 +10,7 @@ from alembic import context
 # Import the app's Base + models so target_metadata reflects the real schema.
 # Importing app.models registers all tables on Base.metadata as a side effect.
 from app.database import Base
-import app.models.tournament  # noqa: F401
+import app.models  # noqa: F401  (registers Organiser + Tournament)
 
 load_dotenv()
 
