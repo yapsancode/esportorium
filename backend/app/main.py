@@ -1,4 +1,6 @@
+import logging
 import os
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -6,6 +8,20 @@ from slowapi.errors import RateLimitExceeded
 from app.limiter import limiter
 from app.routers import tournaments, admin, upload, organiser
 
+# ─── Logging ─────────────────────────────────────────────────────────────────
+# Uvicorn only configures its own loggers (uvicorn.*); the root logger stays
+# at WARNING, so app.* INFO messages are silently dropped. Add an explicit
+# StreamHandler to the "app" namespace so ingest + other app loggers are
+# visible in the uvicorn terminal without touching uvicorn's own log format.
+_app_logger = logging.getLogger("app")
+if not _app_logger.handlers:  # guard against duplicate handlers on uvicorn --reload
+    _handler = logging.StreamHandler(sys.stdout)
+    _handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)-8s %(name)s: %(message)s"))
+    _app_logger.addHandler(_handler)
+_app_logger.setLevel(logging.INFO)
+_app_logger.propagate = False  # don't double-print via root's last-resort handler
+
+# ─── Schema management ────────────────────────────────────────────────────────
 # Schema is managed by Alembic (see backend/alembic/) — run `alembic upgrade head`
 # to apply migrations. No create_all() here; it would create tables outside
 # migration history and mask drift between models and the applied schema.

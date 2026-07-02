@@ -11,3 +11,4 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 httpx==0.28.1
 slowapi==0.1.9
+langchain-google-genai>=4.2.6  # LangChain + Gemini — includes structured output, fallback, tracing
