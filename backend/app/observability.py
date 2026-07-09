@@ -147,6 +147,10 @@ def configure_tracing(app: ASGIApp) -> None:
         Honeycomb, etc. — set OTEL_EXPORTER_OTLP_HEADERS for auth).
       - unset (local dev)                -> console exporter, so traces are
         visible in the uvicorn terminal without standing up a collector.
+      - unset + ENVIRONMENT=production   -> no exporter at all. The console
+        exporter prints a large JSON block per span on every request, which
+        would flood (and bill) Cloud Run logging. Structured request logs
+        still cover production until an OTLP backend is configured.
     """
     from opentelemetry import trace
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -168,7 +172,7 @@ def configure_tracing(app: ASGIApp) -> None:
             OTLPSpanExporter,
         )
         provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
-    else:
+    elif os.getenv("ENVIRONMENT", "development").lower() != "production":
         provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
 
     trace.set_tracer_provider(provider)

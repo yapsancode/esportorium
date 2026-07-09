@@ -89,7 +89,7 @@ _TARGETED_FIELDS = [
     "prize_pool_rm", "max_teams", "registration_link",
 ]
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"  # v2: state may be inferred from the venue, reported with found=false
 _EXTRACTION_PROMPT = f"""\
 [prompt:{PROMPT_VERSION}] You are extracting tournament information from a Malaysian esports announcement (image, PDF, or text).
 
@@ -106,6 +106,11 @@ RULES — read carefully:
 - "max_teams" is the raw number as a string (e.g. "16")
 - "registration_link" must be the full URL including http:// or https://
 - "state" is the Malaysian state (e.g. "Selangor", "Kuala Lumpur") — null for online events
+- EXCEPTION for "state" ONLY: found=true means the state name itself is printed in the
+  source. If it is NOT printed but the venue or location clearly implies it (a well-known
+  mall, township, or city), return the inferred state as the value with found=false.
+  If you cannot confidently infer it, use value=null. Every other field keeps the
+  never-infer rule above.
 
 Fields to extract: title, format, state, venue, start_date, end_date,
 registration_deadline, prize_pool_rm, max_teams, registration_link
@@ -280,6 +285,11 @@ def _apply_guardrails(raw: ExtractionResult) -> tuple[DraftTournament, list[str]
     - a validator returns False (bad URL)
     - a transformer returns None (unparseable / implausible)
 
+    Exception: "state" may arrive inferred from the venue (value set, found=False
+    — prompt v2). It is kept in the draft but flagged, so the organiser sees it
+    pre-filled yet highlighted for confirmation: an inference must never look
+    identical to something printed on the poster.
+
     Low-confidence fields are null in the draft. The organiser is the fallback —
     they fill flagged fields and submit through the normal approval queue.
     """
@@ -299,7 +309,14 @@ def _apply_guardrails(raw: ExtractionResult) -> tuple[DraftTournament, list[str]
     fmt = fmt_raw if fmt_raw in ("online", "offline", "hybrid") else None
     _check("format", fmt)
 
-    state = _val(raw.state)   # optional — not flagged if absent
+    # state: unlike every other field, a value with found=False is legitimate —
+    # it means the model inferred the state from the venue (prompt v2). Keep the
+    # value but flag it for confirmation. Printed states (found=True) stay
+    # unflagged; absent states stay null and unflagged (online events have none).
+    state = raw.state.value or None
+    if state and not raw.state.found:
+        flagged.append("state")
+
     venue = _val(raw.venue)   # optional — not flagged if absent
 
     start_date: Optional[date] = None
