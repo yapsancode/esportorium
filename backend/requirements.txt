@@ -1,7 +1,7 @@
 fastapi==0.115.12
 uvicorn[standard]==0.34.3
 sqlalchemy==2.0.41
-alembic==1.16.2
+alembic #pip install --upgrade alembic
 psycopg2-binary==2.9.10
 python-dotenv==1.1.0
 pydantic[email]==2.11.5
@@ -11,3 +11,10 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 httpx==0.28.1
 slowapi==0.1.9
+langchain-google-genai>=4.2.6  # LangChain + Gemini — includes structured output, fallback, tracing
+
+# Observability (Item 4 — V2): request tracing + traces for the ingest pipeline
+opentelemetry-api==1.43.0
+opentelemetry-sdk==1.43.0
+opentelemetry-instrumentation-fastapi==0.64b0
+opentelemetry-exporter-otlp-proto-http==1.43.0  # only exercised when OTEL_EXPORTER_OTLP_ENDPOINT is set

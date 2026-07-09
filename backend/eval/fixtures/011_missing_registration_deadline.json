@@ -1,0 +1,19 @@
+{
+  "id": "011_missing_registration_deadline",
+  "description": "No registration deadline is stated anywhere in the announcement. Model must return null, not guess from start_date.",
+  "input": {
+    "text": "MLBB Gaming Fest 2025\nOnline Tournament\nTournament runs: August 20 to August 22, 2025\nPrize money: RM 1,500\n16 teams maximum\nSign up: https://gamingfest.my/mlbb"
+  },
+  "expected": {
+    "title": "MLBB Gaming Fest 2025",
+    "format": "online",
+    "state": null,
+    "venue": null,
+    "start_date": "2025-08-20",
+    "end_date": "2025-08-22",
+    "registration_deadline": null,
+    "prize_pool_rm": 1500,
+    "max_teams": 16,
+    "registration_link": "https://gamingfest.my/mlbb"
+  }
+}

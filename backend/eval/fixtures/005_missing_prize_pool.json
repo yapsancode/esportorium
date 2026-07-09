@@ -1,0 +1,19 @@
+{
+  "id": "005_missing_prize_pool",
+  "description": "Announcement explicitly states no cash prize (medals only). Model must return null for prize_pool_rm, not guess or hallucinate a value.",
+  "input": {
+    "text": "MLBB Youth Championship 2025\nFormat: Online\nTournament Dates: August 15 - August 17, 2025\nRegistration closes: August 8, 2025\nNumber of teams: 32\nRegister here: https://youth.mlbbchampionship.my/register\nNo prize pool - participation medals only"
+  },
+  "expected": {
+    "title": "MLBB Youth Championship 2025",
+    "format": "online",
+    "state": null,
+    "venue": null,
+    "start_date": "2025-08-15",
+    "end_date": "2025-08-17",
+    "registration_deadline": "2025-08-08",
+    "prize_pool_rm": null,
+    "max_teams": 32,
+    "registration_link": "https://youth.mlbbchampionship.my/register"
+  }
+}

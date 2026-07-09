@@ -1,0 +1,19 @@
+{
+  "id": "017_missing_max_teams",
+  "description": "Announcement explicitly says open registration with no team cap. Model must not invent a number.",
+  "input": {
+    "text": "MLBB Open Season Pahang 2025\nOffline Tournament\nVenue: Stadium Dato Bahaman, Temerloh, Pahang\nDates: September 13-14, 2025\nReg. Deadline: September 5, 2025\nPrize: RM 3,500\nTeams: Open registration, no team cap\nRegistration: https://pahangmlbb.com/open"
+  },
+  "expected": {
+    "title": "MLBB Open Season Pahang 2025",
+    "format": "offline",
+    "state": "Pahang",
+    "venue": "Stadium Dato Bahaman, Temerloh, Pahang",
+    "start_date": "2025-09-13",
+    "end_date": "2025-09-14",
+    "registration_deadline": "2025-09-05",
+    "prize_pool_rm": 3500,
+    "max_teams": null,
+    "registration_link": "https://pahangmlbb.com/open"
+  }
+}

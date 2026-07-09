@@ -1,0 +1,19 @@
+{
+  "id": "007_malay_date_prose",
+  "description": "Dates written as Malay prose: '1 hingga 3 Ogos 2025'. Model must understand Malay month names and range syntax, then emit ISO dates.",
+  "input": {
+    "text": "Pertandingan MLBB Negeri Sembilan 2025\nFormat: Offline\nTempat: Kompleks Sukan Seremban, Negeri Sembilan\nTarikh: 1 hingga 3 Ogos 2025\nTarikh tutup pendaftaran: 20 Julai 2025\nWang hadiah: RM 4,000\nSlot: 16 pasukan\nDaftar: https://ns-mlbb.com/daftar"
+  },
+  "expected": {
+    "title": "Pertandingan MLBB Negeri Sembilan 2025",
+    "format": "offline",
+    "state": "Negeri Sembilan",
+    "venue": "Kompleks Sukan Seremban, Negeri Sembilan",
+    "start_date": "2025-08-01",
+    "end_date": "2025-08-03",
+    "registration_deadline": "2025-07-20",
+    "prize_pool_rm": 4000,
+    "max_teams": 16,
+    "registration_link": "https://ns-mlbb.com/daftar"
+  }
+}

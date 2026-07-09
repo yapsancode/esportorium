@@ -1,0 +1,19 @@
+{
+  "id": "023_perak_malay_date_month_name",
+  "description": "Dates using full Malay month name 'Disember'. Tests the model's Malay calendar knowledge for month conversion.",
+  "input": {
+    "text": "MLBB Perak Clash 2025\nFormat: Offline\nTempat: Dewan Orang Ramai Ipoh, Perak\nTarikh: 6 Disember 2025 - 8 Disember 2025\nTutup pendaftaran: 25 November 2025\nHadiah: RM 7,500\nPasukan: 24\nDaftar: https://perakmlbb.com/clash2025"
+  },
+  "expected": {
+    "title": "MLBB Perak Clash 2025",
+    "format": "offline",
+    "state": "Perak",
+    "venue": "Dewan Orang Ramai Ipoh, Perak",
+    "start_date": "2025-12-06",
+    "end_date": "2025-12-08",
+    "registration_deadline": "2025-11-25",
+    "prize_pool_rm": 7500,
+    "max_teams": 24,
+    "registration_link": "https://perakmlbb.com/clash2025"
+  }
+}

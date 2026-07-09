@@ -1,0 +1,19 @@
+{
+  "id": "024_online_no_title",
+  "description": "Announcement with no distinct tournament name — just a promotional opener. Model must not hallucinate a title from thin air.",
+  "input": {
+    "text": "Join us this weekend for Mobile Legends!\nFormat: Online\nDates: September 5-7, 2025\nReg closes: August 30, 2025\nPrize: RM 2,000\n16 teams max\nLink: https://mlbb-anon.com/register"
+  },
+  "expected": {
+    "title": null,
+    "format": "online",
+    "state": null,
+    "venue": null,
+    "start_date": "2025-09-05",
+    "end_date": "2025-09-07",
+    "registration_deadline": "2025-08-30",
+    "prize_pool_rm": 2000,
+    "max_teams": 16,
+    "registration_link": "https://mlbb-anon.com/register"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "009_hybrid_format",
+  "description": "Hybrid tournament: online qualifiers + offline finals. Tests the 'hybrid' format enum and multi-phase date extraction.",
+  "input": {
+    "text": "MLBB National League Qualifier 2025\nFormat: Hybrid (Online qualifiers + Offline finals)\nOnline Qualifiers: October 5-7, 2025\nOffline Finals: October 20, 2025 at Axiata Arena, Kuala Lumpur\nRegistration Deadline: September 25, 2025\nTotal Prize Pool: RM 50,000\nMaximum Teams: 64\nRegister: https://mlbb-national.my/qualify"
+  },
+  "expected": {
+    "title": "MLBB National League Qualifier 2025",
+    "format": "hybrid",
+    "state": "Kuala Lumpur",
+    "venue": "Axiata Arena, Kuala Lumpur",
+    "start_date": "2025-10-05",
+    "end_date": "2025-10-20",
+    "registration_deadline": "2025-09-25",
+    "prize_pool_rm": 50000,
+    "max_teams": 64,
+    "registration_link": "https://mlbb-national.my/qualify"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "021_implausible_prize_guardrail",
+  "description": "Prize pool of RM 15,000,000 — above the normalize_rm guardrail ceiling of RM 10,000,000. Expected: guardrail rejects it, prize_pool_rm is null.",
+  "input": {
+    "text": "MLBB World Invitational Malaysia 2025\nOnline Tournament\nDates: August 1-31, 2025\nRegistration Deadline: July 25, 2025\nPrize Pool: RM 15,000,000\nTeams: 32\nRegister: https://world-mlbb.com/2025"
+  },
+  "expected": {
+    "title": "MLBB World Invitational Malaysia 2025",
+    "format": "online",
+    "state": null,
+    "venue": null,
+    "start_date": "2025-08-01",
+    "end_date": "2025-08-31",
+    "registration_deadline": "2025-07-25",
+    "prize_pool_rm": null,
+    "max_teams": 32,
+    "registration_link": "https://world-mlbb.com/2025"
+  }
+}

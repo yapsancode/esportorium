@@ -1,0 +1,19 @@
+{
+  "id": "006_missing_registration_link",
+  "description": "Registration is via WhatsApp only — no URL present. Model must not promote the phone number to registration_link.",
+  "input": {
+    "text": "Selangor MLBB Grand Prix 2025\nFormat: Offline\nVenue: Kompleks Sukan Petaling Jaya, Selangor\nDates: November 1-2, 2025\nRegistration Deadline: October 20, 2025\nPrize: RM 15,000\nTeams: 16\nTo register, contact us via WhatsApp at 012-3456789"
+  },
+  "expected": {
+    "title": "Selangor MLBB Grand Prix 2025",
+    "format": "offline",
+    "state": "Selangor",
+    "venue": "Kompleks Sukan Petaling Jaya, Selangor",
+    "start_date": "2025-11-01",
+    "end_date": "2025-11-02",
+    "registration_deadline": "2025-10-20",
+    "prize_pool_rm": 15000,
+    "max_teams": 16,
+    "registration_link": null
+  }
+}

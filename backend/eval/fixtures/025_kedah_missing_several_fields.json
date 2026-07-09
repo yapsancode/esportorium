@@ -1,0 +1,19 @@
+{
+  "id": "025_kedah_missing_several_fields",
+  "description": "Offline Kedah tournament with no registration deadline and no max_teams stated. Multiple nullable fields. Tests graceful partial extraction.",
+  "input": {
+    "text": "MLBB Kedah State Championship 2025\nFormat: Offline\nVenue: Kompleks Belia dan Sukan Alor Setar, Kedah\nTournament Date: October 25-26, 2025\nPrize: RM 4,000\nAll teams welcome — no limit\nRegister at: https://kedahmlbb.my/2025"
+  },
+  "expected": {
+    "title": "MLBB Kedah State Championship 2025",
+    "format": "offline",
+    "state": "Kedah",
+    "venue": "Kompleks Belia dan Sukan Alor Setar, Kedah",
+    "start_date": "2025-10-25",
+    "end_date": "2025-10-26",
+    "registration_deadline": null,
+    "prize_pool_rm": 4000,
+    "max_teams": null,
+    "registration_link": "https://kedahmlbb.my/2025"
+  }
+}

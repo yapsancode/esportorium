@@ -1,0 +1,19 @@
+{
+  "id": "020_whatsapp_only_no_url",
+  "description": "Registration via WhatsApp only, with no online form. Model must not promote a phone number to registration_link.",
+  "input": {
+    "text": "MLBB Inter-Campus Challenge 2025\nOnline Tournament\nDates: August 10-12, 2025\nRegistration closes: August 3, 2025\nPrize: RM 1,000\nTeams: 16\nTo register, WhatsApp us at 011-23456789. No online registration form available."
+  },
+  "expected": {
+    "title": "MLBB Inter-Campus Challenge 2025",
+    "format": "online",
+    "state": null,
+    "venue": null,
+    "start_date": "2025-08-10",
+    "end_date": "2025-08-12",
+    "registration_deadline": "2025-08-03",
+    "prize_pool_rm": 1000,
+    "max_teams": 16,
+    "registration_link": null
+  }
+}

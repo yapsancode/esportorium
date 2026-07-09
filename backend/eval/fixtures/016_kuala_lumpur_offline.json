@@ -1,0 +1,19 @@
+{
+  "id": "016_kuala_lumpur_offline",
+  "description": "Offline event in Kuala Lumpur explicitly named. Tests that 'Kuala Lumpur' is extracted as state (not abbreviated to 'KL').",
+  "input": {
+    "text": "MLBB E-Sports Festival KL 2025\nFormat: Offline\nVenue: KLCC Convention Centre, Kuala Lumpur\nTournament Dates: October 18-20, 2025\nRegistration Deadline: October 10, 2025\nPrize Fund: RM 20,000\nMax Teams: 32\nSign up: https://kl-esports.my/mlbb2025"
+  },
+  "expected": {
+    "title": "MLBB E-Sports Festival KL 2025",
+    "format": "offline",
+    "state": "Kuala Lumpur",
+    "venue": "KLCC Convention Centre, Kuala Lumpur",
+    "start_date": "2025-10-18",
+    "end_date": "2025-10-20",
+    "registration_deadline": "2025-10-10",
+    "prize_pool_rm": 20000,
+    "max_teams": 32,
+    "registration_link": "https://kl-esports.my/mlbb2025"
+  }
+}

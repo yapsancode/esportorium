@@ -1,12 +1,15 @@
 name: Backend CI/CD
 
-# Runs on PRs to main (lint + tests) and on pushes to main (lint + tests → deploy).
-# Path filter: only triggers when backend code or this workflow changes.
+# Runs on PRs to main/development (lint + tests) and on pushes to main (lint +
+# tests → deploy). Path filter: only triggers when backend code or this
+# workflow changes.
 on:
-  # Run checks on EVERY PR to main so the required "checks" status always reports.
-  # (A path-filtered required check deadlocks PRs that don't touch backend/**.)
+  # Run checks on EVERY PR to main/development so the required "checks" status
+  # always reports. (A path-filtered required check deadlocks PRs that don't
+  # touch backend/**.) Also covers development so work merged there — not just
+  # the eventual main PR — gets validated, including the isolation proof.
   pull_request:
-    branches: [main]
+    branches: [main, development]
   # Only deploy when the backend (or this workflow) actually changes.
   push:
     branches: [main]

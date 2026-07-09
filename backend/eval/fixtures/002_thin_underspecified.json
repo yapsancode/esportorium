@@ -1,0 +1,19 @@
+{
+  "id": "002_thin_underspecified",
+  "description": "Extremely thin announcement with no structured data except a vague title. Correctly flagging almost everything is the right behaviour.",
+  "input": {
+    "text": "MLBB tournament happening soon. Contact us for details."
+  },
+  "expected": {
+    "title": "MLBB tournament",
+    "format": null,
+    "state": null,
+    "venue": null,
+    "start_date": null,
+    "end_date": null,
+    "registration_deadline": null,
+    "prize_pool_rm": null,
+    "max_teams": null,
+    "registration_link": null
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "018_dmy_date_format",
+  "description": "Dates written as DD/MM/YYYY. Model must convert to ISO YYYY-MM-DD; the parse_date guardrail handles the format.",
+  "input": {
+    "text": "MLBB Terengganu Cup 2025\nType: Offline\nLocation: Dataran Batu Burok, Kuala Terengganu, Terengganu\nStart: 05/09/2025\nEnd: 07/09/2025\nRegistration closes: 25/08/2025\nCash prize: RM 5,000\nNumber of teams: 16\nRegister here: https://terengganu-mlbb.my/cup2025"
+  },
+  "expected": {
+    "title": "MLBB Terengganu Cup 2025",
+    "format": "offline",
+    "state": "Terengganu",
+    "venue": "Dataran Batu Burok, Kuala Terengganu, Terengganu",
+    "start_date": "2025-09-05",
+    "end_date": "2025-09-07",
+    "registration_deadline": "2025-08-25",
+    "prize_pool_rm": 5000,
+    "max_teams": 16,
+    "registration_link": "https://terengganu-mlbb.my/cup2025"
+  }
+}

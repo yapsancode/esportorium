@@ -1,0 +1,19 @@
+{
+  "id": "015_single_day_event",
+  "description": "Single-day offline showmatch. start_date and end_date should be identical.",
+  "input": {
+    "text": "MLBB Showmatch Penang 2025\nFormat: Offline\nDate: July 20, 2025\nVenue: Queensbay Mall, Penang\nRegistration Deadline: July 15, 2025\nPrize Pool: RM 500\nTeams: 8\nRegistration: https://penangshowmatch.com/register"
+  },
+  "expected": {
+    "title": "MLBB Showmatch Penang 2025",
+    "format": "offline",
+    "state": "Penang",
+    "venue": "Queensbay Mall, Penang",
+    "start_date": "2025-07-20",
+    "end_date": "2025-07-20",
+    "registration_deadline": "2025-07-15",
+    "prize_pool_rm": 500,
+    "max_teams": 8,
+    "registration_link": "https://penangshowmatch.com/register"
+  }
+}
