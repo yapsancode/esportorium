@@ -28,7 +28,7 @@ async def _post(url: str, payload: dict) -> None:
 
 
 async def notify_discord_new_submission(
-    title: str, organiser: str, format_: str, state: str | None
+    title: str, organiser: str | None, format_: str | None, state: str | None
 ) -> None:
     """Notify admin channel when a new tournament submission arrives."""
     url = os.getenv("DISCORD_WEBHOOK_URL", "").strip()
@@ -42,10 +42,10 @@ async def notify_discord_new_submission(
             "title": "🎮 New Tournament Submission",
             "color": _TERRACOTTA,
             "fields": [
-                {"name": "Title",     "value": title,                   "inline": True},
-                {"name": "Organiser", "value": organiser,               "inline": True},
-                {"name": "Format",    "value": format_.capitalize(),    "inline": True},
-                {"name": "Location",  "value": location,                "inline": True},
+                {"name": "Title",     "value": title,                                            "inline": True},
+                {"name": "Organiser", "value": organiser or "Not specified",                      "inline": True},
+                {"name": "Format",    "value": format_.capitalize() if format_ else "Not specified", "inline": True},
+                {"name": "Location",  "value": location,                                          "inline": True},
             ],
             "footer": {"text": "Review at esportorium.com/admin/dashboard"},
         }],
