@@ -25,10 +25,9 @@ class PrizeBreakdownItem(BaseModel):
 
 
 # ─── Shared base ─────────────────────────────────────────────────────────────
-# Only `title` is required here. Everything else is optional so admins can
-# manually seed tournaments with incomplete info (e.g. scraped listings).
-# TournamentSubmit (the public form) re-declares the fields organisers must
-# provide, since that submission still needs to be complete.
+# Only `title` is required here. Everything else is optional — both for admin
+# manual seeding (e.g. scraped listings) and public submissions, which can
+# also be incomplete drafts for admins to fill in during review.
 
 class TournamentBase(BaseModel):
     title:                 str = Field(..., min_length=3, max_length=200, strip_whitespace=True)
@@ -91,26 +90,18 @@ class TournamentBase(BaseModel):
 class TournamentSubmit(TournamentBase):
     """Used by the public submit endpoint — creates an unapproved record.
 
-    Re-declares the fields organisers must actually provide; TournamentBase
-    only enforces `title` so it can double as the admin manual-seeding schema.
+    Only `title` is required, same as TournamentBase; everything else is
+    optional so organisers can submit incomplete drafts for admins to fill in.
     """
-    format:                Literal["online", "offline", "hybrid"]
-    start_date:            date
-    end_date:              date
-    registration_deadline: date
-    prize_pool_rm:         int = Field(..., ge=0, le=10_000_000)
-    max_teams:             int = Field(..., ge=2, le=10_000)
-    organiser_name:        str = Field(..., min_length=2, max_length=100, strip_whitespace=True)
-    organiser_contact:     str = Field(..., min_length=5, max_length=100, strip_whitespace=True)
-    organiser_email:       EmailStr   # internal notification address; never exposed in public responses
-    registration_link:     str = Field(..., min_length=10, max_length=500)
-    turnstile_token:       str = Field(..., min_length=1, description="Cloudflare Turnstile response token")
+    organiser_email:        Optional[EmailStr] = None  # internal notification address; never exposed in public responses
+    turnstile_token:        str = Field(..., min_length=1, description="Cloudflare Turnstile response token")
 
     @model_validator(mode="after")
     def check_dates_in_future(self) -> "TournamentSubmit":
-        today = date.today()
-        if self.start_date < today:
-            raise ValueError("start_date must be today or in the future")
+        if self.start_date is not None:
+            today = date.today()
+            if self.start_date < today:
+                raise ValueError("start_date must be today or in the future")
         return self
 
 

@@ -93,17 +93,23 @@ export default function Submit() {
     }
     // Date sanity checks — mirror the backend rules for instant feedback.
     // ISO date strings (YYYY-MM-DD) compare correctly with < / >.
+    // Only run these when the relevant dates were actually provided — all fields
+    // except the title are optional now.
     const today = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD in local time
-    if (form.start_date < today) {
+    if (form.start_date && form.start_date < today) {
       setError('Start date must be today or in the future.')
       return
     }
-    if (form.end_date < form.start_date) {
+    if (form.start_date && form.end_date && form.end_date < form.start_date) {
       setError('End date must be on or after the start date.')
       return
     }
-    if (form.registration_deadline > form.start_date) {
+    if (form.start_date && form.registration_deadline && form.registration_deadline > form.start_date) {
       setError('Registration deadline must be on or before the tournament start date.')
+      return
+    }
+    if ((form.format === 'offline' || form.format === 'hybrid') && !form.state) {
+      setError('State is required for offline and hybrid tournaments.')
       return
     }
     setError('')
@@ -111,8 +117,9 @@ export default function Submit() {
     try {
       const payload = {
         ...form,
-        prize_pool_rm: parseInt(form.prize_pool_rm, 10),
-        max_teams: parseInt(form.max_teams, 10),
+        format: form.format || null,
+        prize_pool_rm: form.prize_pool_rm ? parseInt(form.prize_pool_rm, 10) : null,
+        max_teams: form.max_teams ? parseInt(form.max_teams, 10) : null,
         additional_prizes: form.additional_prizes
           ? form.additional_prizes.split(',').map(s => s.trim()).filter(Boolean)
           : [],
@@ -120,6 +127,13 @@ export default function Submit() {
         venue: form.venue || null,
         stage_notes: form.stage_notes || null,
         description: form.description || null,
+        start_date: form.start_date || null,
+        end_date: form.end_date || null,
+        registration_deadline: form.registration_deadline || null,
+        organiser_name: form.organiser_name || null,
+        organiser_contact: form.organiser_contact || null,
+        organiser_email: form.organiser_email || null,
+        registration_link: form.registration_link || null,
         prize_breakdown: prizeBreakdown.filter(item => item.placement.trim() && item.reward.trim()),
         banner_image: form.banner_image || null,
         turnstile_token: turnstileToken,
@@ -145,7 +159,8 @@ export default function Submit() {
           <ShieldCheck className="mx-auto mb-4 h-12 w-12 text-green-600" />
           <h1 className="text-2xl font-extrabold">Submission received!</h1>
           <p className="mt-3 text-muted-foreground">
-            We'll review your tournament within 1–2 business days and notify you at the email you provided.
+            We'll review your tournament within 1–2 business days
+            {form.organiser_email ? ' and notify you at the email you provided.' : '.'}
           </p>
           <Button
             className="mt-8"
@@ -189,7 +204,7 @@ export default function Submit() {
         <Card>
           <CardHeader>
             <CardTitle>Tournament Details</CardTitle>
-            <CardDescription>All fields are required unless marked optional.</CardDescription>
+            <CardDescription>Only the tournament name is required — fill in what you can, our team will help complete the rest during review.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -209,8 +224,8 @@ export default function Submit() {
                 />
               </FormField>
 
-              <FormField label="Format" id="format">
-                <Select required value={form.format} onValueChange={setSelect('format')}>
+              <FormField label="Format (optional)" id="format">
+                <Select value={form.format} onValueChange={setSelect('format')}>
                   <SelectTrigger id="format">
                     <SelectValue placeholder="Select format" />
                   </SelectTrigger>
@@ -250,24 +265,24 @@ export default function Submit() {
               )}
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <FormField label="Start Date" id="start_date">
-                  <Input id="start_date" type="date" required value={form.start_date} onChange={set('start_date')} />
+                <FormField label="Start Date (optional)" id="start_date">
+                  <Input id="start_date" type="date" value={form.start_date} onChange={set('start_date')} />
                 </FormField>
-                <FormField label="End Date" id="end_date">
-                  <Input id="end_date" type="date" required value={form.end_date} onChange={set('end_date')} />
+                <FormField label="End Date (optional)" id="end_date">
+                  <Input id="end_date" type="date" value={form.end_date} onChange={set('end_date')} />
                 </FormField>
               </div>
 
-              <FormField label="Registration Deadline" id="registration_deadline">
-                <Input id="registration_deadline" type="date" required value={form.registration_deadline} onChange={set('registration_deadline')} />
+              <FormField label="Registration Deadline (optional)" id="registration_deadline">
+                <Input id="registration_deadline" type="date" value={form.registration_deadline} onChange={set('registration_deadline')} />
               </FormField>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <FormField label="Prize Pool (RM)" id="prize_pool_rm">
-                  <Input id="prize_pool_rm" type="number" min={0} placeholder="e.g. 500" required value={form.prize_pool_rm} onChange={set('prize_pool_rm')} />
+                <FormField label="Prize Pool (RM) (optional)" id="prize_pool_rm">
+                  <Input id="prize_pool_rm" type="number" min={0} placeholder="e.g. 500" value={form.prize_pool_rm} onChange={set('prize_pool_rm')} />
                 </FormField>
-                <FormField label="Max Teams" id="max_teams">
-                  <Input id="max_teams" type="number" min={2} placeholder="e.g. 16" required value={form.max_teams} onChange={set('max_teams')} />
+                <FormField label="Max Teams (optional)" id="max_teams">
+                  <Input id="max_teams" type="number" min={2} placeholder="e.g. 16" value={form.max_teams} onChange={set('max_teams')} />
                 </FormField>
               </div>
 
@@ -279,8 +294,8 @@ export default function Submit() {
                 <PrizeBreakdownEditor items={prizeBreakdown} onChange={setPrizeBreakdown} />
               </FormField>
 
-              <FormField label="Registration Link" id="registration_link">
-                <Input id="registration_link" type="url" placeholder="https://forms.gle/..." required value={form.registration_link} onChange={set('registration_link')} />
+              <FormField label="Registration Link (optional)" id="registration_link">
+                <Input id="registration_link" type="url" placeholder="https://forms.gle/..." value={form.registration_link} onChange={set('registration_link')} />
               </FormField>
 
               <FormField label="Banner Image (optional)" id="banner_image">
@@ -311,14 +326,14 @@ export default function Submit() {
               <div className="border-t border-border pt-6">
                 <h3 className="mb-4 font-semibold">Organiser Info</h3>
                 <div className="space-y-4">
-                  <FormField label="Organiser Name" id="organiser_name">
-                    <Input id="organiser_name" placeholder="e.g. KL Esports Club" maxLength={100} required value={form.organiser_name} onChange={set('organiser_name')} />
+                  <FormField label="Organiser Name (optional)" id="organiser_name">
+                    <Input id="organiser_name" placeholder="e.g. KL Esports Club" maxLength={100} value={form.organiser_name} onChange={set('organiser_name')} />
                   </FormField>
-                  <FormField label="Contact (WhatsApp / email)" id="organiser_contact">
-                    <Input id="organiser_contact" placeholder="e.g. +6012-3456789" maxLength={100} required value={form.organiser_contact} onChange={set('organiser_contact')} />
+                  <FormField label="Contact (WhatsApp / email) (optional)" id="organiser_contact">
+                    <Input id="organiser_contact" placeholder="e.g. +6012-3456789" maxLength={100} value={form.organiser_contact} onChange={set('organiser_contact')} />
                   </FormField>
-                  <FormField label="Email (for approval notification)" id="organiser_email">
-                    <Input id="organiser_email" type="email" placeholder="organiser@example.com" required value={form.organiser_email} onChange={set('organiser_email')} />
+                  <FormField label="Email (for approval notification) (optional)" id="organiser_email">
+                    <Input id="organiser_email" type="email" placeholder="organiser@example.com" value={form.organiser_email} onChange={set('organiser_email')} />
                   </FormField>
                 </div>
               </div>
