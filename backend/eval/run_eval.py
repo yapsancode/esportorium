@@ -373,7 +373,7 @@ def print_report(fixture_results: list, threshold: float) -> float:
     print(f"  Effective accuracy (errors = all-wrong): {effective_accuracy:.1%}")
     print()
     if effective_accuracy >= threshold:
-        print(f"  ✓  PASS")
+        print("  ✓  PASS")
     else:
         print(f"  ✗  FAIL  — accuracy {effective_accuracy:.1%} is below the {threshold:.0%} threshold")
         if total_wrong > total_empty:

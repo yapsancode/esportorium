@@ -40,6 +40,7 @@ from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig, RunnableLambda
 
+from app.observability import get_tracer, organiser_id_var
 from app.schemas.ingest import (
     DraftTournament,
     ExtractionResult,
@@ -49,6 +50,28 @@ from app.schemas.ingest import (
 from app.services import guardrails
 
 logger = logging.getLogger(__name__)
+_tracer = get_tracer(__name__)
+
+# Approximate Gemini pricing (USD per 1M tokens). Directional, not a billing
+# source of truth — good enough to answer "is Flash-Lite worth it" (DEEPENING.md
+# Item 2's model-upgrade decision) and to spot an unexpectedly expensive call in
+# a trace. Update when Google changes pricing; an unlisted model just costs $0
+# in the estimate rather than raising.
+_PRICING_USD_PER_1M_TOKENS = {
+    "gemini-2.5-flash-lite": {"input": 0.10, "output": 0.40},
+    "gemini-2.5-flash": {"input": 0.30, "output": 2.50},
+}
+
+
+def _estimate_cost_usd(token_usage: list[dict]) -> float:
+    total = 0.0
+    for call in token_usage:
+        prices = _PRICING_USD_PER_1M_TOKENS.get(call["model"])
+        if not prices:
+            continue
+        total += call["input_tokens"] / 1_000_000 * prices["input"]
+        total += call["output_tokens"] / 1_000_000 * prices["output"]
+    return round(total, 6)
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 INGEST_MODEL = os.getenv("INGEST_MODEL", "gemini-2.5-flash-lite")
@@ -104,19 +127,46 @@ class _RunState:
     """Mutable state shared between the callback and run_ingest for one call."""
     model_used: str = "primary"
     fallback_reason: Optional[str] = None
+    token_usage: list = None  # list[dict]: [{"model", "input_tokens", "output_tokens"}, ...]
+
+    def __post_init__(self):
+        if self.token_usage is None:
+            self.token_usage = []
 
 
 class _TriggerLogger(BaseCallbackHandler):
-    """LangChain callback that records which fallback path was taken.
+    """LangChain callback that records which fallback path was taken and how
+    many tokens each underlying model call used.
 
     Writes to the app log AND sets fields on _RunState so run_ingest can
-    include them in the API response — giving callers a verifiable signal of
-    which model produced the result.
+    include them in the API response and in trace span attributes — giving
+    callers a verifiable signal of which model produced the result, and at
+    what token cost.
     """
 
     def __init__(self, state: _RunState):
         super().__init__()
         self.state = state
+        self._current_model = "unknown"
+
+    def on_chat_model_start(self, serialized, messages, *, run_id, parent_run_id=None, **kwargs):
+        invocation_params = kwargs.get("invocation_params") or {}
+        self._current_model = invocation_params.get("model") or invocation_params.get(
+            "model_name"
+        ) or "unknown"
+
+    def on_llm_end(self, response, *, run_id, parent_run_id=None, **kwargs):
+        try:
+            message = response.generations[0][0].message
+            usage = message.usage_metadata
+        except (IndexError, AttributeError, TypeError):
+            usage = None
+        if usage:
+            self.state.token_usage.append({
+                "model": self._current_model,
+                "input_tokens": usage.get("input_tokens", 0),
+                "output_tokens": usage.get("output_tokens", 0),
+            })
 
     def on_chain_error(self, error: Exception, *, run_id, parent_run_id=None, **kwargs):
         if isinstance(error, LowConfidenceError):
@@ -338,23 +388,43 @@ def run_ingest(
         INGEST_MODEL, INGEST_FALLBACK_MODEL, PROMPT_VERSION,
     )
 
-    try:
-        raw: ExtractionResult = chain.invoke(messages, config=config)
-    except Exception as exc:
-        # Both primary AND fallback failed — surface as a 502.
-        logger.error("ingest: both primary and fallback failed: %s", exc)
-        raise ValueError(f"Extraction failed on all models: {exc}") from exc
+    with _tracer.start_as_current_span("ingest.extract") as span:
+        organiser_id = organiser_id_var.get()
+        if organiser_id:
+            span.set_attribute("ingest.organiser_id", organiser_id)
+        span.set_attribute("ingest.prompt_version", PROMPT_VERSION)
 
-    draft, flagged = _apply_guardrails(raw)
+        try:
+            raw: ExtractionResult = chain.invoke(messages, config=config)
+        except Exception as exc:
+            # Both primary AND fallback failed — surface as a 502.
+            logger.error("ingest: both primary and fallback failed: %s", exc)
+            span.set_attribute("ingest.error", str(exc))
+            raise ValueError(f"Extraction failed on all models: {exc}") from exc
 
-    extracted_count = sum(
-        1 for f in _TARGETED_FIELDS
-        if getattr(raw, f).found and getattr(raw, f).value is not None
-    )
+        draft, flagged = _apply_guardrails(raw)
+
+        extracted_count = sum(
+            1 for f in _TARGETED_FIELDS
+            if getattr(raw, f).found and getattr(raw, f).value is not None
+        )
+
+        input_tokens = sum(c["input_tokens"] for c in state.token_usage)
+        output_tokens = sum(c["output_tokens"] for c in state.token_usage)
+        cost_usd = _estimate_cost_usd(state.token_usage)
+
+        span.set_attribute("ingest.model_used", state.model_used)
+        span.set_attribute("ingest.fallback_reason", state.fallback_reason or "")
+        span.set_attribute("ingest.extracted_count", extracted_count)
+        span.set_attribute("ingest.flagged_count", len(flagged))
+        span.set_attribute("ingest.tokens.input", input_tokens)
+        span.set_attribute("ingest.tokens.output", output_tokens)
+        span.set_attribute("ingest.cost_usd", cost_usd)
 
     logger.info(
-        "ingest: done model=%s extracted=%d/%d flagged=%s",
+        "ingest: done model=%s extracted=%d/%d flagged=%s tokens_in=%d tokens_out=%d cost_usd=%.6f",
         state.model_used, extracted_count, len(_TARGETED_FIELDS), flagged,
+        input_tokens, output_tokens, cost_usd,
     )
 
     return IngestDraftOut(

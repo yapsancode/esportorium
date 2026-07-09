@@ -19,6 +19,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 
+from app.observability import organiser_id_var
+
 JWT_SECRET = os.getenv("JWT_SECRET")
 if not JWT_SECRET:
     raise RuntimeError(
@@ -64,25 +66,38 @@ def _decode(token: str) -> dict:
 
 # ─── Route guards ────────────────────────────────────────────────────────────
 
-def require_admin(token: str = Depends(oauth2_scheme)) -> str:
-    """Allow only admin tokens. Returns the admin username (`sub`)."""
+async def require_admin(token: str = Depends(oauth2_scheme)) -> str:
+    """Allow only admin tokens. Returns the admin username (`sub`).
+
+    Async (no actual await needed — jwt.decode is fast, non-blocking CPU work)
+    so FastAPI awaits it in the caller's task instead of routing it through
+    run_in_threadpool. That distinction matters for require_organiser below.
+    """
     payload = _decode(token)
     if payload.get("role") != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return payload["sub"]
 
 
-def require_organiser(token: str = Depends(oauth2_scheme)) -> UUID:
+async def require_organiser(token: str = Depends(oauth2_scheme)) -> UUID:
     """Allow only organiser tokens. Returns the organiser's id (`sub`).
 
     This id is the ONLY source of tenant identity for organiser-scoped routes —
     every query downstream is filtered by it. Never trust an organiser_id that
     arrives in a request body or URL param instead.
+
+    Must stay `async def`: a sync dependency of an async route is executed by
+    FastAPI via run_in_threadpool, which copies the contextvars context into a
+    worker thread — organiser_id_var.set() below would then mutate only that
+    thread-local copy and never reach the request's actual async context,
+    silently breaking organiser_id attribution in logs/traces.
     """
     payload = _decode(token)
     if payload.get("role") != "organiser":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Organiser access required")
     try:
-        return UUID(payload["sub"])
+        organiser_id = UUID(payload["sub"])
     except (ValueError, TypeError, KeyError):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    organiser_id_var.set(str(organiser_id))  # attaches to every log line for this request
+    return organiser_id
