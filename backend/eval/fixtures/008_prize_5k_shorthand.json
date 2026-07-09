@@ -1,0 +1,19 @@
+{
+  "id": "008_prize_5k_shorthand",
+  "description": "Prize pool written as 'RM5K' (no space, K suffix). The normalize_rm guardrail must expand this to 5000.",
+  "input": {
+    "text": "MLBB Penang Challengers Cup 2025\nType: Online\nStart Date: 2025-09-01\nEnd Date: 2025-09-03\nRegistration Deadline: 2025-08-25\nCash Prize: RM5K\nTeam Slots: 16\nOfficial Registration: https://penangmlbb.com/register"
+  },
+  "expected": {
+    "title": "MLBB Penang Challengers Cup 2025",
+    "format": "online",
+    "state": null,
+    "venue": null,
+    "start_date": "2025-09-01",
+    "end_date": "2025-09-03",
+    "registration_deadline": "2025-08-25",
+    "prize_pool_rm": 5000,
+    "max_teams": 16,
+    "registration_link": "https://penangmlbb.com/register"
+  }
+}

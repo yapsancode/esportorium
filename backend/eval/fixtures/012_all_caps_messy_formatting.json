@@ -1,0 +1,19 @@
+{
+  "id": "012_all_caps_messy_formatting",
+  "description": "All-caps announcement with asterisk decorations and pipe separators. Tests robustness to noisy formatting.",
+  "input": {
+    "text": "*** MLBB CHAMPIONSHIP SABAH 2025 ***\nFORMAT: OFFLINE | LOCATION: KOTA KINABALU, SABAH\nWHEN: 7 NOVEMBER 2025 - 9 NOVEMBER 2025\nREGISTRATION DEADLINE: 25 OCTOBER 2025\nPRIZE: RM 6,000 CASH\nTEAMS: 32 TEAMS ONLY\nREGISTER NOW: https://sabahmlbb2025.com"
+  },
+  "expected": {
+    "title": "MLBB Championship Sabah 2025",
+    "format": "offline",
+    "state": "Sabah",
+    "venue": "Kota Kinabalu, Sabah",
+    "start_date": "2025-11-07",
+    "end_date": "2025-11-09",
+    "registration_deadline": "2025-10-25",
+    "prize_pool_rm": 6000,
+    "max_teams": 32,
+    "registration_link": "https://sabahmlbb2025.com"
+  }
+}

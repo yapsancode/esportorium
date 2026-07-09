@@ -1,0 +1,19 @@
+{
+  "id": "022_sarawak_offline_rm_shorthand",
+  "description": "Offline Sarawak tournament with prize in 'RM10K' shorthand and a written date range in English.",
+  "input": {
+    "text": "Kuching MLBB Warriors Cup 2025\nFormat: Offline\nVenue: Stadium Kuching, Sarawak\nEvent Date: 22 November to 24 November 2025\nReg. Deadline: November 10, 2025\nCash Prize: RM10K\nNo. of Teams: 16\nSign up: https://kuchingmlbb.my/warriors2025"
+  },
+  "expected": {
+    "title": "Kuching MLBB Warriors Cup 2025",
+    "format": "offline",
+    "state": "Sarawak",
+    "venue": "Stadium Kuching, Sarawak",
+    "start_date": "2025-11-22",
+    "end_date": "2025-11-24",
+    "registration_deadline": "2025-11-10",
+    "prize_pool_rm": 10000,
+    "max_teams": 16,
+    "registration_link": "https://kuchingmlbb.my/warriors2025"
+  }
+}

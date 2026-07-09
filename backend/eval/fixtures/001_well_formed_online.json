@@ -1,0 +1,19 @@
+{
+  "id": "001_well_formed_online",
+  "description": "Well-formed online tournament with all fields explicitly stated. Baseline: model should achieve a perfect score here.",
+  "input": {
+    "text": "MLBB Cup 2025 Online Tournament. Format: Online. Start: 2025-08-01, End: 2025-08-03. Registration deadline: 2025-07-25. Prize pool: RM 5,000. Max teams: 16. Register at https://example.com/register"
+  },
+  "expected": {
+    "title": "MLBB Cup 2025 Online Tournament",
+    "format": "online",
+    "state": null,
+    "venue": null,
+    "start_date": "2025-08-01",
+    "end_date": "2025-08-03",
+    "registration_deadline": "2025-07-25",
+    "prize_pool_rm": 5000,
+    "max_teams": 16,
+    "registration_link": "https://example.com/register"
+  }
+}

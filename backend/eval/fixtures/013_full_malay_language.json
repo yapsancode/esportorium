@@ -1,0 +1,19 @@
+{
+  "id": "013_full_malay_language",
+  "description": "Announcement entirely in Malay. 'Bersemuka' means offline/face-to-face. 'Hadiah' is prize, 'Bilangan pasukan' is team count.",
+  "input": {
+    "text": "Kejohanan Mobile Legends Bang Bang Piala Selangor 2025\nTarikh: 15 September 2025 - 17 September 2025\nTempat: Stadium Shah Alam, Selangor\nFormat: Bersemuka (Offline)\nHadiah: RM 10,000\nBilangan pasukan: 32\nPendaftaran ditutup: 10 September 2025\nDaftar di sini: https://mlbb.selangor.gov.my/daftar"
+  },
+  "expected": {
+    "title": "Kejohanan Mobile Legends Bang Bang Piala Selangor 2025",
+    "format": "offline",
+    "state": "Selangor",
+    "venue": "Stadium Shah Alam, Selangor",
+    "start_date": "2025-09-15",
+    "end_date": "2025-09-17",
+    "registration_deadline": "2025-09-10",
+    "prize_pool_rm": 10000,
+    "max_teams": 32,
+    "registration_link": "https://mlbb.selangor.gov.my/daftar"
+  }
+}

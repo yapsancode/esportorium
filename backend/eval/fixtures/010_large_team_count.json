@@ -1,0 +1,19 @@
+{
+  "id": "010_large_team_count",
+  "description": "128-team open with a large prize pool. Tests that parse_int accepts values within the [2, 10000] guardrail range.",
+  "input": {
+    "text": "MLBB Malaysia Open Championship 2025\nFormat: Online\nEvent Dates: December 1 - December 7, 2025\nRegistration Closes: November 20, 2025\nPrize Pool: RM 100,000\nTeam Slots: 128\nRegistration Link: https://mlbb-open.my/registration"
+  },
+  "expected": {
+    "title": "MLBB Malaysia Open Championship 2025",
+    "format": "online",
+    "state": null,
+    "venue": null,
+    "start_date": "2025-12-01",
+    "end_date": "2025-12-07",
+    "registration_deadline": "2025-11-20",
+    "prize_pool_rm": 100000,
+    "max_teams": 128,
+    "registration_link": "https://mlbb-open.my/registration"
+  }
+}

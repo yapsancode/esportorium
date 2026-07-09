@@ -1,0 +1,19 @@
+{
+  "id": "003_offline_johor_all_fields",
+  "description": "Complete offline tournament in Johor with a venue and all fields present.",
+  "input": {
+    "text": "Johor MLBB Open 2025\nTournament Type: Offline\nDate: September 20-22, 2025\nVenue: Dewan Serbaguna Johor Bahru, Johor\nRegistration Deadline: September 10, 2025\nPrize Pool: RM 3,000\nMax Teams: 8\nRegister: https://forms.gle/johormlbb2025"
+  },
+  "expected": {
+    "title": "Johor MLBB Open 2025",
+    "format": "offline",
+    "state": "Johor",
+    "venue": "Dewan Serbaguna Johor Bahru, Johor",
+    "start_date": "2025-09-20",
+    "end_date": "2025-09-22",
+    "registration_deadline": "2025-09-10",
+    "prize_pool_rm": 3000,
+    "max_teams": 8,
+    "registration_link": "https://forms.gle/johormlbb2025"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "014_prize_no_space_rm",
+  "description": "Prize written as 'RM2,500' (no space after RM). normalize_rm must handle this without the space.",
+  "input": {
+    "text": "MLBB Rapid Fire Challenge 2025\nOnline Event - No venue\nCompetition Dates: November 15-16, 2025\nRegistration Deadline: November 10, 2025\nCash Prize: RM2,500\nParticipant Limit: 8 teams\nRegistration: https://rapidfire.mlbb.my"
+  },
+  "expected": {
+    "title": "MLBB Rapid Fire Challenge 2025",
+    "format": "online",
+    "state": null,
+    "venue": null,
+    "start_date": "2025-11-15",
+    "end_date": "2025-11-16",
+    "registration_deadline": "2025-11-10",
+    "prize_pool_rm": 2500,
+    "max_teams": 8,
+    "registration_link": "https://rapidfire.mlbb.my"
+  }
+}

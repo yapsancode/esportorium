@@ -1,0 +1,19 @@
+{
+  "id": "019_complete_offline_selangor",
+  "description": "Complete offline tournament in Selangor with prose-style date range ('13 to 15 December'). All fields present.",
+  "input": {
+    "text": "Selangor MLBB Super Series 2025\nTournament Format: Offline\nVenue: Stadium Melawati, Shah Alam, Selangor\nDates: December 13 to December 15, 2025\nRegistration Deadline: November 30, 2025\nPrize Pool: RM 12,000\nParticipating Teams: 32 teams\nRegister at: https://selangormlbb.my/superseries2025"
+  },
+  "expected": {
+    "title": "Selangor MLBB Super Series 2025",
+    "format": "offline",
+    "state": "Selangor",
+    "venue": "Stadium Melawati, Shah Alam, Selangor",
+    "start_date": "2025-12-13",
+    "end_date": "2025-12-15",
+    "registration_deadline": "2025-11-30",
+    "prize_pool_rm": 12000,
+    "max_teams": 32,
+    "registration_link": "https://selangormlbb.my/superseries2025"
+  }
+}
