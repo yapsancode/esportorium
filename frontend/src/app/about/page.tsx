@@ -5,7 +5,6 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import JsonLd from '@/components/JsonLd'
 import { Separator } from '@/components/ui/separator'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Trophy, MapPin, Users, Zap, Info, Code, ExternalLink, ShieldCheck, CheckCircle2 } from 'lucide-react'
@@ -22,9 +21,39 @@ export const metadata: Metadata = {
 }
 
 const ROADMAP = [
-  { phase: 'MVP', status: 'current',  items: ['Mobile Legends tournaments', 'Public browse & discovery', 'Organiser submission form', 'Admin review panel', 'Cloudflare R2 banner hosting'] },
-  { phase: 'V2',  status: 'upcoming', items: ['Organiser accounts & login', 'Additional games (Valorant, PUBG Mobile)', 'Malaysia map view', 'Email notifications to players', 'Tournament bracket display'] },
-  { phase: 'V3',  status: 'upcoming', items: ['Native registration flow', 'Player profiles', 'Monetisation & featured listings', 'Mobile app'] },
+  {
+    label: 'Available now',
+    status: 'live',
+    items: [
+      'Browse & discover Mobile Legends tournaments',
+      'Filter by status, format & Malaysian state',
+      'Shareable tournament pages with registration links',
+      'Free organiser submissions — no account needed',
+      'Every listing human-reviewed before it goes live',
+    ],
+  },
+  {
+    label: 'Coming next',
+    status: 'next',
+    items: [
+      'Organiser accounts & dashboard',
+      'AI-assisted submission — paste a poster or message, we structure it',
+      'More games — Valorant & PUBG Mobile',
+      'Malaysia map view',
+      'Tournament bracket display',
+      'Match notifications for players',
+    ],
+  },
+  {
+    label: 'Later',
+    status: 'later',
+    items: [
+      'Native registration flow',
+      'Player profiles',
+      'Featured listings for organisers',
+      'Mobile app',
+    ],
+  },
 ]
 
 const ORG_SCHEMA = {
@@ -167,23 +196,20 @@ export default function About() {
         <section className="mb-12">
           <h2 className="mb-6 text-2xl font-bold">Roadmap</h2>
           <div className="space-y-6">
-            {ROADMAP.map((phase) => (
-              <div key={phase.phase} className="flex gap-5">
+            {ROADMAP.map((group, i) => (
+              <div key={group.label} className="flex gap-5">
                 <div className="flex flex-col items-center">
-                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${phase.status === 'current' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                    {phase.phase}
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${group.status === 'live' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                    {group.status === 'live'
+                      ? <CheckCircle2 className="h-5 w-5" />
+                      : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
                   </div>
-                  <div className="mt-1 flex-1 w-px bg-border" />
+                  {i < ROADMAP.length - 1 && <div className="mt-1 flex-1 w-px bg-border" />}
                 </div>
                 <div className="pb-6">
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="font-semibold">{phase.phase}</span>
-                    <Badge variant={phase.status === 'current' ? 'current' : 'secondary' as any} className="text-xs">
-                      {phase.status === 'current' ? 'In progress' : 'Planned'}
-                    </Badge>
-                  </div>
+                  <h3 className="mb-2 font-semibold">{group.label}</h3>
                   <ul className="space-y-1">
-                    {phase.items.map((item) => (
+                    {group.items.map((item) => (
                       <li key={item} className="text-sm text-muted-foreground flex items-start gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-border" />
                         {item}
