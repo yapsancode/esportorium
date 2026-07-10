@@ -114,3 +114,28 @@ def delete_tournament(db: Session, tournament_id: UUID, organiser_id: UUID) -> N
     tournament = _get_owned_or_404(db, tournament_id, organiser_id)  # RULE 3
     db.delete(tournament)
     db.commit()
+
+
+# ─── Claiming an ownerless tournament ────────────────────────────────────────
+
+class TournamentAlreadyClaimed(Exception):
+    """Raised when a claim targets a tournament that already has an owner."""
+
+
+def claim_tournament(db: Session, tournament_id: UUID, organiser_id: UUID) -> Tournament:
+    """Bind an ownerless tournament to this organiser (RULE 1: ownership comes
+    from the authenticated token, never the request body).
+
+    The claim only succeeds if the row exists and has no owner yet — an already
+    claimed row raises TournamentAlreadyClaimed so a leaked/reused link can't
+    steal a tenant's tournament. A missing row raises 404.
+    """
+    tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if tournament is None:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    if tournament.organiser_id is not None:
+        raise TournamentAlreadyClaimed()
+    tournament.organiser_id = organiser_id
+    db.commit()
+    db.refresh(tournament)
+    return tournament

@@ -86,14 +86,32 @@ def _wrap(title: str, body_html: str) -> str:
 
 
 async def send_approval_email(
-    to: str, title: str, registration_link: str, start_date: str, tournament_url: str
+    to: str, title: str, registration_link: str, start_date: str, tournament_url: str,
+    claim_url: str | None = None,
 ) -> None:
-    """Notify an organiser that their tournament has been approved and listed."""
+    """Notify an organiser that their tournament has been approved and listed.
+
+    When `claim_url` is given (the tournament has no account owner yet), the
+    email also invites the organiser to claim it so they can manage it and list
+    future events from their own dashboard.
+    """
+    claim_block = ""
+    if claim_url:
+        claim_block = f"""\
+    <div style="margin:24px 0;padding:16px;border:1px solid {_BORDER};border-radius:10px;background:{_BG}">
+      <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:{_TEXT}">
+        <strong>Manage this tournament yourself.</strong> Claim it to edit details anytime and
+        list future tournaments from your own dashboard — including our AI import that turns a
+        poster or announcement into a ready-to-submit listing.</p>
+      <div style="text-align:center">{_button(claim_url, "Claim your tournament")}</div>
+    </div>"""
+
     body = f"""\
     <p style="{_P}">Good news! Your tournament <strong>{title}</strong> has been approved and is
     now live on Esportorium.</p>
     <p style="{_P}"><strong>Starts:</strong> {start_date}</p>
     <div style="margin:24px 0;text-align:center">{_button(tournament_url, "View your listing")}</div>
+    {claim_block}
     <p style="margin:0 0 14px;font-size:13px;line-height:1.6;color:{_MUTED}">
       Registration link players will use:
       <a href="{registration_link}" style="color:{_BRAND}">{registration_link}</a>

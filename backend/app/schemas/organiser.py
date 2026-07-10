@@ -53,3 +53,18 @@ class OrganiserTournamentOut(TournamentAdminOut):
     """Response for an organiser's own rows — includes `organiser_id` so the
     owner is visible, plus organiser_email (the owner may see their own PII)."""
     organiser_id: Optional[UUID] = None
+
+
+# ─── Claiming a tournament from an approval email ────────────────────────────
+
+class ClaimRequest(BaseModel):
+    """Body for POST /api/organiser/claim — the capability token from the email."""
+    claim_token: str = Field(..., min_length=1)
+
+
+class ClaimPreviewOut(BaseModel):
+    """Unauthenticated context for the claim page, so it can show which
+    tournament is being claimed before asking the visitor to sign in."""
+    tournament_id: UUID
+    title: str
+    already_claimed: bool

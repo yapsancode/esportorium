@@ -22,25 +22,34 @@ export class NetworkError extends Error {
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
-// Returns the stored admin token only if it exists and its JWT `exp` is still in
-// the future. Clears the token and returns null when missing, malformed, or expired.
-export function getValidAdminToken(): string | null {
+// Returns the token stored under `key` only if it exists and its JWT `exp` is
+// still in the future. Clears the token and returns null when missing,
+// malformed, or expired. Shared by the admin and organiser token helpers.
+function getValidToken(key: string): string | null {
   if (typeof window === 'undefined') return null
-  const token = localStorage.getItem('admin_token')
+  const token = localStorage.getItem(key)
   if (!token) return null
 
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
     // `exp` is in seconds since epoch; treat a token with no exp as invalid.
     if (typeof payload.exp !== 'number' || payload.exp * 1000 <= Date.now()) {
-      localStorage.removeItem('admin_token')
+      localStorage.removeItem(key)
       return null
     }
     return token
   } catch {
-    localStorage.removeItem('admin_token')
+    localStorage.removeItem(key)
     return null
   }
+}
+
+export function getValidAdminToken(): string | null {
+  return getValidToken('admin_token')
+}
+
+export function getValidOrganiserToken(): string | null {
+  return getValidToken('organiser_token')
 }
 
 // ── Client-side helpers ───────────────────────────────────────────────────────
@@ -89,6 +98,41 @@ export async function adminFetch(path: string, options: RequestInit = {}) {
       ...((options.headers as Record<string, string>) ?? {}),
     },
   })
+}
+
+export async function organiserFetch(path: string, options: RequestInit = {}) {
+  const token = getValidOrganiserToken()
+  return apiFetch(path, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...((options.headers as Record<string, string>) ?? {}),
+    },
+  })
+}
+
+// Sends text and/or a file to the agentic ingest endpoint (multipart) and
+// returns the extracted draft. Do NOT set Content-Type — the browser sets the
+// multipart boundary itself. Auth uses the organiser token.
+export async function organiserIngest(
+  input: { text?: string; file?: File },
+): Promise<import('./types').IngestDraftOut> {
+  const token = getValidOrganiserToken()
+  const form = new FormData()
+  if (input.text) form.append('text', input.text)
+  if (input.file) form.append('file', input.file)
+  let res: Response
+  try {
+    res = await fetch(`${BASE_URL}/api/organiser/ingest`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    })
+  } catch {
+    throw new NetworkError()
+  }
+  if (!res.ok) throw new ApiError(res.status)
+  return res.json()
 }
 
 // ── Server-side helper (Server Components / Route Handlers only) ──────────────

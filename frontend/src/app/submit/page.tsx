@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Turnstile } from '@marsidev/react-turnstile'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -189,6 +190,13 @@ export default function Submit() {
           <h1 className="text-3xl font-extrabold text-foreground">Submit a Tournament</h1>
           <p className="mt-2 text-muted-foreground">
             Fill in the details below. Your submission will be reviewed by our team before going live.
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Organising regularly?{' '}
+            <Link href="/organiser/signup" className="font-medium text-primary hover:underline">
+              Create an organiser account
+            </Link>{' '}
+            to manage your listings and auto-fill tournaments from a poster with AI.
           </p>
         </div>
 
