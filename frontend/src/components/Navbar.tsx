@@ -9,12 +9,16 @@ import { cn } from '@/lib/utils'
 import { Menu, X } from 'lucide-react'
 
 const NAV_LINKS = [
+  { to: '/tournaments', label: 'Tournaments' },
   { to: '/docs',  label: 'Docs'  },
   { to: '/qna',   label: 'Q&A'   },
   { to: '/about', label: 'About' },
 ]
 
-export default function Navbar() {
+// `floating` renders the navbar as a rounded pill hovering over the page
+// (used on the landing page, over the scenic background) instead of the
+// default full-width sticky bar.
+export default function Navbar({ floating = false }: { floating?: boolean }) {
   const pathname    = usePathname()
   const router      = useRouter()
   const isAdmin     = pathname?.startsWith('/admin') ?? false
@@ -36,9 +40,21 @@ export default function Navbar() {
   const close = () => setOpen(false)
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-4">
+    <header
+      className={cn(
+        floating
+          ? 'absolute inset-x-0 top-4 z-40 px-4 sm:top-6 sm:px-6'
+          : 'sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur'
+      )}
+    >
+      <div
+        className={cn(
+          floating
+            ? 'mx-auto max-w-5xl rounded-2xl border border-white/60 bg-background/90 px-4 shadow-lg shadow-black/5 backdrop-blur-md sm:px-6'
+            : 'mx-auto max-w-6xl px-4 sm:px-6 lg:px-8'
+        )}
+      >
+        <div className={cn('flex items-center justify-between gap-4', floating ? 'h-14' : 'h-16')}>
 
           {/* Logo — always visible */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0" onClick={close}>
@@ -50,7 +66,7 @@ export default function Navbar() {
 
           {/* Desktop centre nav (public pages only) */}
           {!isAdmin && !isOrganiser && (
-            <nav className="hidden items-center gap-1 sm:flex">
+            <nav className="hidden items-center gap-1 lg:flex">
               {NAV_LINKS.map(({ to, label }) => (
                 <Link
                   key={to}
@@ -67,7 +83,7 @@ export default function Navbar() {
           )}
 
           {/* Desktop right nav — hidden on mobile, replaced by hamburger */}
-          <nav className="hidden items-center gap-3 shrink-0 sm:flex">
+          <nav className="hidden items-center gap-3 shrink-0 lg:flex">
             {isAdmin ? (
               <>
                 <Link href="/admin/dashboard"><Button variant="ghost" size="sm">Pending</Button></Link>
@@ -96,7 +112,7 @@ export default function Navbar() {
             onClick={() => setOpen(prev => !prev)}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
-            className="flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:hidden"
+            className="flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -106,7 +122,14 @@ export default function Navbar() {
 
       {/* Mobile dropdown */}
       {open && (
-        <div className="border-t border-border bg-background sm:hidden">
+        <div
+          className={cn(
+            'lg:hidden',
+            floating
+              ? 'mx-auto mt-2 max-w-5xl rounded-2xl border border-white/60 bg-background/95 shadow-lg shadow-black/5 backdrop-blur-md'
+              : 'border-t border-border bg-background'
+          )}
+        >
           <div className="mx-auto max-w-6xl space-y-1 px-4 py-3">
             {isAdmin ? (
               <>

@@ -18,7 +18,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const tournaments = await getTournaments()
 
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: 'https://esportorium.com',         lastModified: new Date(), changeFrequency: 'hourly',  priority: 1.0 },
+    { url: 'https://esportorium.com',             lastModified: new Date(), changeFrequency: 'weekly',  priority: 1.0 },
+    { url: 'https://esportorium.com/tournaments', lastModified: new Date(), changeFrequency: 'hourly',  priority: 1.0 },
     { url: 'https://esportorium.com/submit',  lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
     { url: 'https://esportorium.com/docs',    lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     { url: 'https://esportorium.com/qna',     lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },

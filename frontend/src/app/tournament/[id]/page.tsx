@@ -123,7 +123,8 @@ export default async function TournamentDetailPage(
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://esportorium.com" },
-      { "@type": "ListItem", "position": 2, "name": title, "item": canonicalUrl },
+      { "@type": "ListItem", "position": 2, "name": "Tournaments", "item": "https://esportorium.com/tournaments" },
+      { "@type": "ListItem", "position": 3, "name": title, "item": canonicalUrl },
     ],
   }
 
