@@ -28,6 +28,9 @@ if not JWT_SECRET:
     )
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "480"))
+# Claim links live in an email inbox, so they get a much longer life than a
+# login session — the organiser may not act on the approval for weeks.
+CLAIM_TOKEN_EXPIRE_DAYS = int(os.getenv("CLAIM_TOKEN_EXPIRE_DAYS", "30"))
 
 # A single bearer scheme serves both roles. tokenUrl only affects the /docs
 # "Authorize" helper; any valid token (admin or organiser) is accepted here and
@@ -62,6 +65,37 @@ def _decode(token: str) -> dict:
         return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+
+# ─── Claim tokens ────────────────────────────────────────────────────────────
+# A claim token is a capability: whoever holds the link (sent to the organiser's
+# email on approval) may bind that one tournament to their account, provided it
+# is still unowned. It carries `type: "claim"` so it can never be used as a login
+# token, and vice versa.
+
+def create_claim_token(tournament_id: str) -> str:
+    """Issue a long-lived claim token for a specific tournament."""
+    payload = {
+        "sub": tournament_id,
+        "type": "claim",
+        "exp": datetime.now(timezone.utc) + timedelta(days=CLAIM_TOKEN_EXPIRE_DAYS),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def decode_claim_token(token: str) -> str:
+    """Validate a claim token and return the tournament id it authorises.
+
+    Raises 400 for a malformed/expired token or one that isn't a claim token —
+    a login token must never be accepted here.
+    """
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired claim link")
+    if payload.get("type") != "claim" or "sub" not in payload:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid claim link")
+    return payload["sub"]
 
 
 # ─── Route guards ────────────────────────────────────────────────────────────

@@ -10,7 +10,15 @@ always-pass TURNSTILE_TEST_SECRET is used in non-production environments) —
 test infrastructure disables the guard, production config is unchanged.
 """
 import pytest
-from app.limiter import limiter
+from dotenv import load_dotenv
+
+# Load .env before any test module imports app code. app.database loads it too,
+# but a test that imports app.auth (which reads JWT_SECRET at import time) before
+# app.database would otherwise fail — this makes env availability import-order
+# independent for the whole suite.
+load_dotenv()
+
+from app.limiter import limiter  # noqa: E402  (must follow load_dotenv)
 
 
 @pytest.fixture(autouse=True)

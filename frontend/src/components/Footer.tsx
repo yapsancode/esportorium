@@ -56,6 +56,7 @@ export default function Footer() {
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <Link href="/"       className="hover:text-foreground transition-colors">Home</Link>
             <Link href="/submit" className="hover:text-foreground transition-colors">Submit</Link>
+            <Link href="/organiser/login" className="hover:text-foreground transition-colors">Organiser</Link>
             <Link href="/docs"   className="hover:text-foreground transition-colors">Docs</Link>
             <Link href="/qna"    className="hover:text-foreground transition-colors">Q&amp;A</Link>
             <Link href="/about"  className="hover:text-foreground transition-colors">About</Link>

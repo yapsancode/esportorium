@@ -11,11 +11,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.auth import create_access_token, require_organiser
+from app.auth import create_access_token, decode_claim_token, require_organiser
 from app.database import get_db
 from app.limiter import limiter
+from app.models.tournament import Tournament
 from app.schemas.ingest import IngestDraftOut
 from app.schemas.organiser import (
+    ClaimPreviewOut,
+    ClaimRequest,
     OrganiserLogin,
     OrganiserOut,
     OrganiserSignup,
@@ -111,6 +114,41 @@ def delete_my_tournament(
     """Delete one of the caller's tournaments — ownership-checked, 404 on mismatch."""
     organiser_service.delete_tournament(db, tournament_id, organiser_id)
     return {"detail": "Deleted"}
+
+
+# ─── Claiming a tournament from an approval email ────────────────────────────
+
+@router.get("/claim/preview", response_model=ClaimPreviewOut)
+def preview_claim(token: str, db: Session = Depends(get_db)):
+    """Resolve a claim token to its tournament so the claim page can show
+    context before the visitor logs in. No auth: holding the token is the
+    capability. Returns already_claimed so the UI can explain a spent link."""
+    tournament_id = decode_claim_token(token)
+    tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if tournament is None:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    return ClaimPreviewOut(
+        tournament_id=tournament.id,
+        title=tournament.title,
+        already_claimed=tournament.organiser_id is not None,
+    )
+
+
+@router.post("/claim", response_model=OrganiserTournamentOut)
+def claim_tournament(
+    data: ClaimRequest,
+    organiser_id: UUID = Depends(require_organiser),
+    db: Session = Depends(get_db),
+):
+    """Bind the tournament named by the claim token to the caller's account.
+
+    Ownership is set from the JWT (rule 1). Fails 409 if the tournament already
+    has an owner — a reused or leaked link can't reassign an owned row."""
+    tournament_id = decode_claim_token(data.claim_token)
+    try:
+        return organiser_service.claim_tournament(db, UUID(tournament_id), organiser_id)
+    except organiser_service.TournamentAlreadyClaimed:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This tournament has already been claimed")
 
 
 # ─── Agentic ingest ──────────────────────────────────────────────────────────

@@ -15,14 +15,21 @@ const NAV_LINKS = [
 ]
 
 export default function Navbar() {
-  const pathname  = usePathname()
-  const router    = useRouter()
-  const isAdmin   = pathname?.startsWith('/admin') ?? false
+  const pathname    = usePathname()
+  const router      = useRouter()
+  const isAdmin     = pathname?.startsWith('/admin') ?? false
+  const isOrganiser = pathname?.startsWith('/organiser') ?? false
   const [open, setOpen] = useState(false)
 
   function handleLogout() {
     localStorage.removeItem('admin_token')
     router.push('/admin/login')
+    setOpen(false)
+  }
+
+  function handleOrganiserLogout() {
+    localStorage.removeItem('organiser_token')
+    router.push('/organiser/login')
     setOpen(false)
   }
 
@@ -41,8 +48,8 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop centre nav (non-admin only) */}
-          {!isAdmin && (
+          {/* Desktop centre nav (public pages only) */}
+          {!isAdmin && !isOrganiser && (
             <nav className="hidden items-center gap-1 sm:flex">
               {NAV_LINKS.map(({ to, label }) => (
                 <Link
@@ -67,9 +74,16 @@ export default function Navbar() {
                 <Link href="/admin/tournaments"><Button variant="ghost" size="sm">Tournaments</Button></Link>
                 <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
               </>
+            ) : isOrganiser ? (
+              <>
+                <Link href="/organiser/dashboard"><Button variant="ghost" size="sm">My Tournaments</Button></Link>
+                <Link href="/organiser/tournaments/new"><Button size="sm">New Tournament</Button></Link>
+                <Button variant="outline" size="sm" onClick={handleOrganiserLogout}>Logout</Button>
+              </>
             ) : (
               <>
                 <Link href="/submit"><Button variant="outline" size="sm">Submit Tournament</Button></Link>
+                <Link href="/organiser/login"><Button variant="ghost" size="sm">Organisers</Button></Link>
                 <Link href="/admin/login">
                   <Button variant="ghost" size="sm" className="text-muted-foreground">Admin</Button>
                 </Link>
@@ -105,6 +119,17 @@ export default function Navbar() {
                   Logout
                 </button>
               </>
+            ) : isOrganiser ? (
+              <>
+                <MobileLink href="/organiser/dashboard"        label="My Tournaments" onClick={close} />
+                <MobileLink href="/organiser/tournaments/new"  label="New Tournament" onClick={close} primary />
+                <button
+                  onClick={handleOrganiserLogout}
+                  className="w-full rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  Logout
+                </button>
+              </>
             ) : (
               <>
                 {NAV_LINKS.map(({ to, label }) => (
@@ -112,6 +137,7 @@ export default function Navbar() {
                 ))}
                 <div className="border-t border-border pt-2 space-y-1">
                   <MobileLink href="/submit" label="Submit Tournament" onClick={close} primary />
+                  <MobileLink href="/organiser/login" label="Organisers" onClick={close} />
                   <MobileLink href="/admin/login" label="Admin" onClick={close} />
                 </div>
               </>

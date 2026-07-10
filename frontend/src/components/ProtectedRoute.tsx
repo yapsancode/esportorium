@@ -2,19 +2,28 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getValidAdminToken } from '@/lib/api'
+import { getValidAdminToken, getValidOrganiserToken } from '@/lib/api'
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
+// Guards a client route behind a valid JWT. `role` picks which token to check
+// and where to redirect when it's missing or expired.
+export default function ProtectedRoute({
+  children,
+  role = 'admin',
+}: {
+  children: React.ReactNode
+  role?: 'admin' | 'organiser'
+}) {
   const router = useRouter()
   const [checked, setChecked] = useState(false)
 
   useEffect(() => {
-    if (!getValidAdminToken()) {
-      router.replace('/admin/login')
+    const valid = role === 'organiser' ? getValidOrganiserToken() : getValidAdminToken()
+    if (!valid) {
+      router.replace(role === 'organiser' ? '/organiser/login' : '/admin/login')
     } else {
       setChecked(true)
     }
-  }, [router])
+  }, [router, role])
 
   if (!checked) return null
   return <>{children}</>

@@ -2,7 +2,7 @@ import os
 from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
-from app.auth import create_access_token, require_admin, verify_password
+from app.auth import create_access_token, create_claim_token, require_admin, verify_password
 from app.database import get_db
 from app.limiter import limiter
 from app.models.tournament import Tournament
@@ -14,6 +14,9 @@ from app.services.notifications import (
 from app.services.email import send_approval_email, send_rejection_email
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
+
+# Base URL of the public site, used to build organiser-facing links in emails.
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "https://esportorium.com").rstrip("/")
 
 
 # --- Auth ---
@@ -90,13 +93,21 @@ def admin_approve(tournament_id: UUID, background_tasks: BackgroundTasks, db: Se
     )
     # Manually-seeded tournaments may not have an organiser email on file — nothing to notify.
     if tournament.organiser_email:
+        # Offer a claim link only when the tournament has no account owner yet.
+        # A tournament an organiser created from their own dashboard is already
+        # owned, so there's nothing to claim.
+        claim_url = None
+        if tournament.organiser_id is None:
+            claim_token = create_claim_token(str(tournament.id))
+            claim_url = f"{FRONTEND_BASE_URL}/organiser/claim?token={claim_token}"
         background_tasks.add_task(
             send_approval_email,
             to=tournament.organiser_email,
             title=tournament.title,
             registration_link=tournament.registration_link or "TBD",
             start_date=str(tournament.start_date) if tournament.start_date else "TBD",
-            tournament_url=f"https://esportorium.com/tournament/{tournament.id}",
+            tournament_url=f"{FRONTEND_BASE_URL}/tournament/{tournament.id}",
+            claim_url=claim_url,
         )
     return tournament
 
