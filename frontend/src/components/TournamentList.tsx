@@ -89,7 +89,7 @@ export default function TournamentList() {
     "@type": "ItemList",
     "name": "Malaysian Esports Tournaments",
     "description": "Curated list of Mobile Legends tournaments in Malaysia.",
-    "url": "https://esportorium.com",
+    "url": "https://esportorium.com/tournaments",
     "numberOfItems": tournaments.length,
     "itemListElement": tournaments.slice(0, 20).map((t, i) => ({
       "@type": "ListItem",
