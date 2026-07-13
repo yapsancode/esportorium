@@ -4,29 +4,43 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import LocalizedMeta from '@/components/LocalizedMeta'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { FileText, CheckCircle, Clock, Link as LinkIcon, Image, AlertCircle, ArrowRight, MessageCircleQuestion } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useLang } from '@/lib/i18n'
 
 const CONTACT_EMAIL = 'team.iidevstudio@gmail.com'
 
-const sections = [
-  { id: 'overview',     label: 'Overview' },
-  { id: 'eligibility', label: 'Eligibility' },
-  { id: 'submission',  label: 'How to Submit' },
-  { id: 'after',       label: 'After Submission' },
-  { id: 'images',      label: 'Image Guidelines' },
-  { id: 'fields',      label: 'Field Reference' },
+// Section ids stay stable (used by anchor links + the scroll-spy observer);
+// only the visible labels are translated.
+const SECTION_IDS = ['overview', 'eligibility', 'submission', 'after', 'images', 'fields'] as const
+
+// Colour token per "after submission" state, matched by index to the dict rows.
+const AFTER_COLORS = ['pending', 'current', 'past']
+const OVERVIEW_ICONS = [
+  <CheckCircle key="0" className="h-5 w-5 text-green-600" />,
+  <Clock key="1" className="h-5 w-5 text-blue-600" />,
+  <LinkIcon key="2" className="h-5 w-5 text-primary" />,
+]
+const IMAGE_ICONS = [
+  <Image key="0" className="h-4 w-4 text-muted-foreground" />,
+  <CheckCircle key="1" className="h-4 w-4 text-green-600" />,
+  <CheckCircle key="2" className="h-4 w-4 text-green-600" />,
+  <AlertCircle key="3" className="h-4 w-4 text-yellow-600" />,
 ]
 
 export default function Documentation() {
+  const { t } = useLang()
   const [activeSection, setActiveSection] = useState('overview')
 
+  const sections = SECTION_IDS.map((id) => ({ id, label: t.docs.sections[id] }))
+
   useEffect(() => {
-    const observers = sections.map(({ id }) => {
+    const observers = SECTION_IDS.map((id) => {
       const el = document.getElementById(id)
       if (!el) return null
       const observer = new IntersectionObserver(
@@ -42,6 +56,7 @@ export default function Documentation() {
   return (
     <>
     <div className="min-h-screen bg-background">
+      <LocalizedMeta title={t.meta.docsTitle} description={t.meta.docsDescription} />
       <Navbar />
 
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
@@ -50,7 +65,7 @@ export default function Documentation() {
           <aside className="hidden w-52 shrink-0 lg:block">
             <div className="sticky top-24">
               <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                On this page
+                {t.docs.onThisPage}
               </p>
               <nav className="flex flex-col gap-0.5">
                 {sections.map((s) => (
@@ -73,13 +88,13 @@ export default function Documentation() {
 
               <div className="space-y-1">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  More
+                  {t.docs.more}
                 </p>
                 <Link href="/qna" className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
-                  <MessageCircleQuestion className="h-3.5 w-3.5" /> Q&amp;A
+                  <MessageCircleQuestion className="h-3.5 w-3.5" /> {t.docs.viewQna}
                 </Link>
                 <Link href="/submit" className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
-                  <ArrowRight className="h-3.5 w-3.5" /> Submit Tournament
+                  <ArrowRight className="h-3.5 w-3.5" /> {t.docs.submitATournament}
                 </Link>
               </div>
             </div>
@@ -88,33 +103,26 @@ export default function Documentation() {
           <main className="min-w-0 flex-1">
             <div className="mb-2 flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
-              <span className="text-sm font-medium text-primary">Documentation</span>
+              <span className="text-sm font-medium text-primary">{t.docs.label}</span>
             </div>
-            <h1 className="text-4xl font-extrabold text-foreground">Platform Guide</h1>
+            <h1 className="text-4xl font-extrabold text-foreground">{t.docs.title}</h1>
             <p className="mt-3 text-lg text-muted-foreground">
-              Everything you need to know about listing and discovering esports tournaments on Esportorium.
+              {t.docs.subtitle}
             </p>
 
             <Separator className="my-8" />
 
             <section id="overview" className="scroll-mt-24">
-              <h2 className="mb-4 text-2xl font-bold">Overview</h2>
+              <h2 className="mb-4 text-2xl font-bold">{t.docs.sections.overview}</h2>
               <p className="leading-relaxed text-muted-foreground">
-                Esportorium is Malaysia's curated esports tournament discovery platform. Players can
-                browse upcoming, ongoing, and past tournaments. Tournament organisers can submit
-                their events for listing — all submissions go through an admin review before
-                going live.
+                {t.docs.overviewBody}
               </p>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                {[
-                  { icon: <CheckCircle className="h-5 w-5 text-green-600" />, title: 'Curated', desc: 'Every tournament is reviewed before it appears publicly.' },
-                  { icon: <Clock className="h-5 w-5 text-blue-600" />, title: 'Up to date', desc: 'Status is derived from dates — always accurate.' },
-                  { icon: <LinkIcon className="h-5 w-5 text-primary" />, title: 'Link out', desc: 'Registration stays on your own platform — we just list it.' },
-                ].map((item) => (
+                {t.docs.overviewCards.map((item, i) => (
                   <Card key={item.title}>
                     <CardContent className="pt-5">
                       <div className="mb-2 flex items-center gap-2">
-                        {item.icon}
+                        {OVERVIEW_ICONS[i]}
                         <span className="font-semibold">{item.title}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">{item.desc}</p>
@@ -127,19 +135,12 @@ export default function Documentation() {
             <Separator className="my-10" />
 
             <section id="eligibility" className="scroll-mt-24">
-              <h2 className="mb-4 text-2xl font-bold">Eligibility</h2>
+              <h2 className="mb-4 text-2xl font-bold">{t.docs.sections.eligibility}</h2>
               <p className="mb-5 text-muted-foreground">
-                To be listed on Esportorium, your tournament must meet all of the following criteria:
+                {t.docs.eligibilityIntro}
               </p>
               <ul className="space-y-3">
-                {[
-                  'Tournament must be open to Malaysian participants.',
-                  'Game must be Mobile Legends: Bang Bang (other titles coming in V2).',
-                  'Tournament must have a defined start date, end date, and registration deadline.',
-                  'A valid external registration link is required (Google Form, Battlefy, etc.).',
-                  'Organisers must provide a contact method (WhatsApp number or email).',
-                  'Registration deadline must fall on or before the tournament start date.',
-                ].map((item) => (
+                {t.docs.eligibilityItems.map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
                     <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
                     {item}
@@ -147,29 +148,22 @@ export default function Documentation() {
                 ))}
               </ul>
               <div className="mt-5 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
-                <strong>Note:</strong> Submissions that do not meet these criteria will be rejected.
-                You will receive an email notification with the reason.
+                {t.docs.eligibilityNote}
               </div>
             </section>
 
             <Separator className="my-10" />
 
             <section id="submission" className="scroll-mt-24">
-              <h2 className="mb-4 text-2xl font-bold">How to Submit</h2>
+              <h2 className="mb-4 text-2xl font-bold">{t.docs.sections.submission}</h2>
               <p className="mb-6 text-muted-foreground">
-                No account is needed. The submission form is fully public.
+                {t.docs.submissionIntro}
               </p>
               <ol className="space-y-6">
-                {[
-                  { step: '1', title: 'Go to Submit Tournament', desc: 'Click the "Submit Tournament" button in the navigation bar, or visit /submit directly.' },
-                  { step: '2', title: 'Fill in tournament details', desc: 'Complete all required fields — name, format, dates, prize pool, max teams, and registration link. See the Field Reference below for notes on each field.' },
-                  { step: '3', title: 'Add organiser info', desc: 'Provide your organiser name, a contact method (WhatsApp or email), and the email address where you want to receive the approval notification.' },
-                  { step: '4', title: '(Optional) Upload a banner', desc: 'Upload a landscape banner image. Recommended: 1280×720 px (16:9), JPG or PNG, max 5 MB.' },
-                  { step: '5', title: 'Submit for review', desc: "Your submission enters the pending queue. An admin will review it within 1–2 business days and you'll receive an email once a decision is made." },
-                ].map((item) => (
-                  <li key={item.step} className="flex gap-4">
+                {t.docs.submissionSteps.map((item, i) => (
+                  <li key={item.title} className="flex gap-4">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                      {item.step}
+                      {i + 1}
                     </div>
                     <div>
                       <p className="font-semibold">{item.title}</p>
@@ -183,18 +177,14 @@ export default function Documentation() {
             <Separator className="my-10" />
 
             <section id="after" className="scroll-mt-24">
-              <h2 className="mb-4 text-2xl font-bold">After Submission</h2>
+              <h2 className="mb-4 text-2xl font-bold">{t.docs.sections.after}</h2>
               <p className="mb-5 text-muted-foreground">
-                Once submitted, your tournament enters the pending queue. Here's what happens next:
+                {t.docs.afterIntro}
               </p>
               <div className="space-y-4">
-                {[
-                  { status: 'Pending',  color: 'pending', desc: 'Your submission is in the review queue. Typically reviewed within 1–2 business days.' },
-                  { status: 'Approved', color: 'current', desc: "Your tournament is now live and publicly visible. You'll receive a notification at the organiser email you provided." },
-                  { status: 'Rejected', color: 'past',    desc: "Your submission didn't meet the listing criteria. The notification email will include the reason. You may resubmit after addressing the issue." },
-                ].map((item) => (
+                {t.docs.afterStates.map((item, i) => (
                   <div key={item.status} className="flex items-start gap-4 rounded-lg border border-border p-4">
-                    <Badge variant={item.color as any} className="mt-0.5 shrink-0">{item.status}</Badge>
+                    <Badge variant={AFTER_COLORS[i] as any} className="mt-0.5 shrink-0">{item.status}</Badge>
                     <p className="text-sm text-muted-foreground">{item.desc}</p>
                   </div>
                 ))}
@@ -204,19 +194,14 @@ export default function Documentation() {
             <Separator className="my-10" />
 
             <section id="images" className="scroll-mt-24">
-              <h2 className="mb-4 text-2xl font-bold">Image Guidelines</h2>
+              <h2 className="mb-4 text-2xl font-bold">{t.docs.sections.images}</h2>
               <p className="mb-5 text-muted-foreground">
-                Banner images are optional but strongly recommended — they make your listing stand out.
+                {t.docs.imagesIntro}
               </p>
               <div className="rounded-lg border border-border p-5 space-y-3">
-                {[
-                  { icon: <Image className="h-4 w-4 text-muted-foreground" />, label: 'Accepted formats', value: 'JPG, JPEG, PNG' },
-                  { icon: <CheckCircle className="h-4 w-4 text-green-600" />, label: 'Aspect ratio', value: '16:9 (landscape only)' },
-                  { icon: <CheckCircle className="h-4 w-4 text-green-600" />, label: 'Recommended resolution', value: '1280 × 720 px' },
-                  { icon: <AlertCircle className="h-4 w-4 text-yellow-600" />, label: 'Maximum file size', value: '5 MB' },
-                ].map((row) => (
+                {t.docs.imageRows.map((row, i) => (
                   <div key={row.label} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">{row.icon} {row.label}</div>
+                    <div className="flex items-center gap-2 text-muted-foreground">{IMAGE_ICONS[i]} {row.label}</div>
                     <span className="font-medium">{row.value}</span>
                   </div>
                 ))}
@@ -226,41 +211,25 @@ export default function Documentation() {
             <Separator className="my-10" />
 
             <section id="fields" className="scroll-mt-24">
-              <h2 className="mb-4 text-2xl font-bold">Field Reference</h2>
+              <h2 className="mb-4 text-2xl font-bold">{t.docs.sections.fields}</h2>
               <p className="mb-5 text-muted-foreground">
-                A complete list of all submission form fields, whether they are required, and what to enter.
+                {t.docs.fieldsIntro}
               </p>
               <div className="overflow-hidden rounded-lg border border-border">
                 <table className="w-full text-sm">
                   <thead className="bg-muted">
                     <tr>
-                      <th className="px-4 py-3 text-left font-semibold">Field</th>
-                      <th className="px-4 py-3 text-left font-semibold">Required</th>
-                      <th className="px-4 py-3 text-left font-semibold">Notes</th>
+                      <th className="px-4 py-3 text-left font-semibold">{t.docs.fieldsHeaderField}</th>
+                      <th className="px-4 py-3 text-left font-semibold">{t.docs.fieldsHeaderRequired}</th>
+                      <th className="px-4 py-3 text-left font-semibold">{t.docs.fieldsHeaderNotes}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {[
-                      ['Tournament Name',        'Yes',        'Keep it concise and descriptive. Include the season or year if applicable.'],
-                      ['Format',                 'Yes',        'Online or Offline.'],
-                      ['State',                  'If offline', 'The Malaysian state where the event is held.'],
-                      ['Venue',                  'If offline', 'Full venue name and address.'],
-                      ['Start Date',             'Yes',        'The first day of the tournament.'],
-                      ['End Date',               'Yes',        'The last day of the tournament.'],
-                      ['Registration Deadline',  'Yes',        'Must be on or before the start date.'],
-                      ['Prize Pool (RM)',         'Yes',        'Cash prize in Ringgit Malaysia. Enter 0 if there is no cash prize.'],
-                      ['Additional Prizes',      'No',         'e.g. Trophy, Jersey, Vouchers — comma-separated. Leave blank if none.'],
-                      ['Max Teams',              'Yes',        'Total team slots available for this tournament.'],
-                      ['Registration Link',      'Yes',        'External URL players click to register (Google Form, Battlefy, Challonge, etc.).'],
-                      ['Banner Image',           'No',         '16:9 landscape image, JPG or PNG, max 5 MB.'],
-                      ['Organiser Name',         'Yes',        'Your team, club, or company name.'],
-                      ['Organiser Contact',      'Yes',        'WhatsApp number (with country code) or email address.'],
-                      ['Organiser Email',        'Yes',        'Used to send the approval or rejection notification. Not shown publicly.'],
-                    ].map(([field, required, notes]) => (
+                    {t.docs.fieldsRows.map(([field, required, notes]) => (
                       <tr key={field} className="hover:bg-muted/40">
                         <td className="px-4 py-3 font-medium">{field}</td>
                         <td className="px-4 py-3">
-                          <Badge variant={required === 'Yes' ? 'default' : required === 'No' ? 'secondary' : 'outline'} className="text-xs">
+                          <Badge variant={required === t.docs.reqYes ? 'default' : required === t.docs.reqNo ? 'secondary' : 'outline'} className="text-xs">
                             {required}
                           </Badge>
                         </td>
@@ -275,9 +244,9 @@ export default function Documentation() {
             <Separator className="my-10" />
 
             <section className="rounded-xl bg-muted p-8">
-              <h2 className="mb-1 text-xl font-bold">Need more help?</h2>
+              <h2 className="mb-1 text-xl font-bold">{t.docs.needHelpTitle}</h2>
               <p className="mb-6 text-muted-foreground text-sm">
-                Browse common questions, or reach out to us directly at{' '}
+                {t.docs.needHelpBody}{' '}
                 <a href={`mailto:${CONTACT_EMAIL}`} className="text-primary hover:underline font-medium">
                   {CONTACT_EMAIL}
                 </a>.
@@ -285,12 +254,12 @@ export default function Documentation() {
               <div className="flex flex-wrap gap-3">
                 <Link href="/qna">
                   <Button variant="outline" className="gap-2">
-                    <MessageCircleQuestion className="h-4 w-4" /> View Q&amp;A
+                    <MessageCircleQuestion className="h-4 w-4" /> {t.docs.viewQna}
                   </Button>
                 </Link>
                 <Link href="/submit">
                   <Button className="gap-2">
-                    Submit a Tournament <ArrowRight className="h-4 w-4" />
+                    {t.docs.submitATournament} <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
               </div>

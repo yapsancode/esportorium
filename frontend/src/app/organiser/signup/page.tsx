@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { apiFetch, getValidOrganiserToken, ApiError, NetworkError } from '@/lib/api'
+import { useLang } from '@/lib/i18n'
 
 // Only allow redirecting back to internal organiser paths — never an
 // attacker-supplied absolute URL (open-redirect guard).
@@ -21,6 +22,7 @@ function safeNext(): string {
 
 export default function OrganiserSignup() {
   const router = useRouter()
+  const { t } = useLang()
   const [form, setForm] = useState({ email: '', password: '', display_name: '', contact: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -40,7 +42,7 @@ export default function OrganiserSignup() {
     e.preventDefault()
     setError('')
     if (form.password.length < 8) {
-      setError('Password must be at least 8 characters.')
+      setError(t.organiser.passwordMin)
       return
     }
     setLoading(true)
@@ -58,13 +60,13 @@ export default function OrganiserSignup() {
       router.push(safeNext())
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
-        setError('An account with this email already exists. Log in instead.')
+        setError(t.organiser.emailExists)
       } else if (err instanceof ApiError && err.status === 422) {
-        setError('Please check your details and try again.')
+        setError(t.organiser.checkDetails)
       } else if (err instanceof NetworkError) {
-        setError("Can't reach the server. Check your connection and try again.")
+        setError(t.organiser.cantReachServer)
       } else {
-        setError('Something went wrong. Please try again.')
+        setError(t.organiser.somethingWrong)
       }
       setLoading(false)
     }
@@ -73,33 +75,33 @@ export default function OrganiserSignup() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <Link href="/" className="absolute top-5 left-5 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="h-4 w-4" /> Back to home
+        <ArrowLeft className="h-4 w-4" /> {t.common.backToHome}
       </Link>
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center items-center">
           <Image src="/esportorium-logo.png" alt="Esportorium" width={48} height={48} className="mb-2 h-12 w-12 rounded-lg" />
-          <CardTitle className="text-2xl font-extrabold">Create organiser account</CardTitle>
-          <CardDescription>List and manage your own tournaments</CardDescription>
+          <CardTitle className="text-2xl font-extrabold">{t.organiser.signupTitle}</CardTitle>
+          <CardDescription>{t.organiser.signupSubtitle}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="display_name">Organiser / Team Name</Label>
-              <Input id="display_name" type="text" placeholder="e.g. KL Esports Club"
+              <Label htmlFor="display_name">{t.form.organiserTeamName}</Label>
+              <Input id="display_name" type="text" placeholder={t.form.organiserNamePlaceholder}
                 value={form.display_name} onChange={set('display_name')} required minLength={2} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" autoComplete="email" placeholder="you@example.com"
+              <Label htmlFor="email">{t.common.email}</Label>
+              <Input id="email" type="email" autoComplete="email" placeholder={t.organiser.emailPlaceholder}
                 value={form.email} onChange={set('email')} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="contact">Contact (WhatsApp / email)</Label>
-              <Input id="contact" type="text" placeholder="e.g. +6012-3456789"
+              <Label htmlFor="contact">{t.form.contactWhatsappEmail}</Label>
+              <Input id="contact" type="text" placeholder={t.form.contactPlaceholder}
                 value={form.contact} onChange={set('contact')} required minLength={5} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.common.password}</Label>
               <div className="relative">
                 <Input id="password" type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password" value={form.password} onChange={set('password')}
@@ -110,16 +112,16 @@ export default function OrganiserSignup() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">At least 8 characters.</p>
+              <p className="text-xs text-muted-foreground">{t.organiser.atLeast8}</p>
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating account…' : 'Create account'}
+              {loading ? t.organiser.creatingAccount : t.organiser.createAccountBtn}
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link href="/organiser/login" className="font-medium text-primary hover:underline">Log in</Link>
+            {t.organiser.alreadyHaveAccount}{' '}
+            <Link href="/organiser/login" className="font-medium text-primary hover:underline">{t.common.logIn}</Link>
           </p>
         </CardContent>
       </Card>

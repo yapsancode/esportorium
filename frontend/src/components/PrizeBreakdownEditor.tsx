@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Plus, X } from 'lucide-react'
 import type { PrizeBreakdownItem } from '@/lib/types'
+import { useLang } from '@/lib/i18n'
 
 export default function PrizeBreakdownEditor({
   items, onChange,
@@ -11,6 +12,7 @@ export default function PrizeBreakdownEditor({
   items: PrizeBreakdownItem[]
   onChange: (items: PrizeBreakdownItem[]) => void
 }) {
+  const { t } = useLang()
   function update(index: number, field: keyof PrizeBreakdownItem, value: string) {
     onChange(items.map((item, i) => (i === index ? { ...item, [field]: value } : item)))
   }
@@ -26,14 +28,14 @@ export default function PrizeBreakdownEditor({
       {items.map((item, i) => (
         <div key={i} className="flex gap-2">
           <Input
-            placeholder="e.g. Champion"
+            placeholder={t.form.placementPlaceholder}
             maxLength={50}
             value={item.placement}
             onChange={(e) => update(i, 'placement', e.target.value)}
             className="flex-1"
           />
           <Input
-            placeholder="e.g. RM 5,000"
+            placeholder={t.form.rewardPlaceholder}
             maxLength={100}
             value={item.reward}
             onChange={(e) => update(i, 'reward', e.target.value)}
@@ -46,7 +48,7 @@ export default function PrizeBreakdownEditor({
       ))}
       {items.length < 15 && (
         <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={add}>
-          <Plus className="h-3.5 w-3.5" /> Add Placement
+          <Plus className="h-3.5 w-3.5" /> {t.form.addPlacement}
         </Button>
       )}
     </div>

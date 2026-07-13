@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea'
 import PrizeBreakdownEditor from '@/components/PrizeBreakdownEditor'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { adminFetch, uploadBanner, ApiError } from '@/lib/api'
+import { useLang } from '@/lib/i18n'
 import type { PrizeBreakdownItem } from '@/lib/types'
 
 const STATES = [
@@ -82,6 +83,14 @@ function toPayload(form: FormState, prizeBreakdown: PrizeBreakdownItem[]) {
 
 function AdminTournamentsContent() {
   const router = useRouter()
+  const { t } = useLang()
+  const opt = ` ${t.common.optional}`
+  const fmtLabel = (format: string | null, state: string | null) => {
+    if (!format) return t.status.tbd
+    const fmtMap: Record<string, string> = { online: t.format.online, offline: t.format.offline, hybrid: t.format.hybrid }
+    const fmt = fmtMap[format] ?? format
+    return (format === 'offline' || format === 'hybrid') && state ? `${fmt} · ${state}` : fmt
+  }
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -106,7 +115,7 @@ function AdminTournamentsContent() {
         localStorage.removeItem('admin_token')
         router.push('/admin/login')
       } else {
-        setError('Failed to load tournaments.')
+        setError(t.admin.failedLoadTournaments)
       }
     } finally {
       setLoading(false)
@@ -137,11 +146,11 @@ function AdminTournamentsContent() {
     if (!file) return
     setBannerError('')
     if (!file.type.startsWith('image/')) {
-      setBannerError('Please choose an image file.')
+      setBannerError(t.form.chooseImageError)
       return
     }
     if (file.size > 2 * 1024 * 1024) {
-      setBannerError('Image must be 2 MB or smaller.')
+      setBannerError(t.form.imageTooLarge)
       return
     }
     setBannerUploading(true)
@@ -149,7 +158,7 @@ function AdminTournamentsContent() {
       const url = await uploadBanner(file)
       setForm(prev => ({ ...prev, banner_image: url }))
     } catch {
-      setBannerError('Upload failed. Please try again.')
+      setBannerError(t.form.uploadFailed)
     } finally {
       setBannerUploading(false)
     }
@@ -170,19 +179,19 @@ function AdminTournamentsContent() {
       }
       setDialogOpen(false)
     } catch {
-      setFormError('Failed to save. Check all fields and try again.')
+      setFormError(t.admin.saveFailed)
     } finally {
       setSaving(false)
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this tournament? This cannot be undone.')) return
+    if (!confirm(t.admin.deleteConfirm)) return
     try {
       await adminFetch(`/api/admin/tournaments/${id}`, { method: 'DELETE' })
-      setTournaments(prev => prev.filter(t => t.id !== id))
+      setTournaments(prev => prev.filter(item => item.id !== id))
     } catch {
-      alert('Failed to delete. Please try again.')
+      alert(t.admin.deleteFailed)
     }
   }
 
@@ -192,46 +201,46 @@ function AdminTournamentsContent() {
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-extrabold text-foreground">Manage Tournaments</h1>
-            <p className="mt-1 text-muted-foreground">Add, edit, or remove tournaments from the platform.</p>
+            <h1 className="text-3xl font-extrabold text-foreground">{t.admin.manageTitle}</h1>
+            <p className="mt-1 text-muted-foreground">{t.admin.manageSubtitle}</p>
           </div>
-          <Button className="gap-2" onClick={openAdd}><Plus className="h-4 w-4" /> Add Tournament</Button>
+          <Button className="gap-2" onClick={openAdd}><Plus className="h-4 w-4" /> {t.admin.addTournament}</Button>
         </div>
 
         {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
 
         <Card>
-          <CardHeader><CardTitle className="text-base font-semibold">All Tournaments</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base font-semibold">{t.admin.allTournaments}</CardTitle></CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <p className="px-6 py-8 text-center text-muted-foreground">Loading…</p>
+              <p className="px-6 py-8 text-center text-muted-foreground">{t.common.loading}</p>
             ) : tournaments.length === 0 ? (
-              <p className="px-6 py-8 text-center text-muted-foreground">No tournaments yet.</p>
+              <p className="px-6 py-8 text-center text-muted-foreground">{t.admin.noTournaments}</p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Tournament</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Approved</TableHead>
-                      <TableHead>Format</TableHead>
-                      <TableHead>Prize (RM)</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>{t.admin.colTournament}</TableHead>
+                      <TableHead>{t.organiser.colStatus}</TableHead>
+                      <TableHead>{t.admin.colApproved}</TableHead>
+                      <TableHead>{t.admin.colFormat}</TableHead>
+                      <TableHead>{t.admin.colPrize}</TableHead>
+                      <TableHead className="text-right">{t.admin.colActions}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {tournaments.map((t) => (
-                      <TableRow key={t.id}>
-                        <TableCell className="font-medium">{t.title}</TableCell>
-                        <TableCell><Badge variant={t.status as any}>{t.status.charAt(0).toUpperCase() + t.status.slice(1)}</Badge></TableCell>
-                        <TableCell>{t.is_approved ? <span className="text-green-600 font-medium">Yes</span> : <span className="text-muted-foreground">Pending</span>}</TableCell>
-                        <TableCell>{formatCell(t)}</TableCell>
-                        <TableCell>{t.prize_pool_rm != null ? `RM ${t.prize_pool_rm.toLocaleString()}` : 'TBD'}</TableCell>
+                    {tournaments.map((tour) => (
+                      <TableRow key={tour.id}>
+                        <TableCell className="font-medium">{tour.title}</TableCell>
+                        <TableCell><Badge variant={tour.status as any}>{(t.status as Record<string, string>)[tour.status] ?? tour.status}</Badge></TableCell>
+                        <TableCell>{tour.is_approved ? <span className="text-green-600 font-medium">{t.admin.approvedYes}</span> : <span className="text-muted-foreground">{t.admin.approvedPending}</span>}</TableCell>
+                        <TableCell>{fmtLabel(tour.format, tour.state)}</TableCell>
+                        <TableCell>{tour.prize_pool_rm != null ? `RM ${tour.prize_pool_rm.toLocaleString()}` : t.status.tbd}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(t)}><Pencil className="h-3.5 w-3.5" /></Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(t.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(tour)}><Pencil className="h-3.5 w-3.5" /></Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(tour.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -246,74 +255,74 @@ function AdminTournamentsContent() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader><DialogTitle>{editing ? 'Edit Tournament' : 'Add Tournament'}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing ? t.admin.editTournament : t.admin.addTournament}</DialogTitle></DialogHeader>
           <form onSubmit={handleSave} className="space-y-4 py-2">
-            <Field label="Tournament Name" id="d-title"><Input id="d-title" required maxLength={200} value={form.title} onChange={set('title')} /></Field>
-            <Field label="Description / Rules (optional)" id="d-description">
+            <Field label={t.form.tournamentName} id="d-title"><Input id="d-title" required maxLength={200} value={form.title} onChange={set('title')} /></Field>
+            <Field label={t.form.descriptionRules + opt} id="d-description">
               <Textarea id="d-description" maxLength={2000} rows={4} value={form.description} onChange={set('description')} />
             </Field>
-            <Field label="Format (optional)" id="d-format">
+            <Field label={t.form.format + opt} id="d-format">
               <Select value={form.format} onValueChange={setSelect('format')}>
-                <SelectTrigger id="d-format"><SelectValue placeholder="Select format" /></SelectTrigger>
+                <SelectTrigger id="d-format"><SelectValue placeholder={t.form.selectFormat} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="online">Online</SelectItem>
-                  <SelectItem value="offline">Offline</SelectItem>
-                  <SelectItem value="hybrid">Hybrid (online + offline)</SelectItem>
+                  <SelectItem value="online">{t.format.online}</SelectItem>
+                  <SelectItem value="offline">{t.format.offline}</SelectItem>
+                  <SelectItem value="hybrid">{t.format.hybridLong}</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
             {(form.format === 'offline' || form.format === 'hybrid') && (
               <>
-                <Field label="State" id="d-state">
+                <Field label={t.form.state} id="d-state">
                   <Select required value={form.state} onValueChange={setSelect('state')}>
-                    <SelectTrigger id="d-state"><SelectValue placeholder="Select state" /></SelectTrigger>
+                    <SelectTrigger id="d-state"><SelectValue placeholder={t.form.selectState} /></SelectTrigger>
                     <SelectContent>{STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>
                 </Field>
-                <Field label="Venue (optional)" id="d-venue"><Input id="d-venue" maxLength={300} value={form.venue} onChange={set('venue')} /></Field>
+                <Field label={t.form.venue + opt} id="d-venue"><Input id="d-venue" maxLength={300} value={form.venue} onChange={set('venue')} /></Field>
               </>
             )}
             {form.format === 'hybrid' && (
-              <Field label="Stage Breakdown (optional)" id="d-stage-notes">
-                <Input id="d-stage-notes" placeholder="e.g. Group stage online, playoffs offline in KL" maxLength={300} value={form.stage_notes} onChange={set('stage_notes')} />
+              <Field label={t.form.stageBreakdown + opt} id="d-stage-notes">
+                <Input id="d-stage-notes" placeholder={t.form.stageBreakdownPlaceholder} maxLength={300} value={form.stage_notes} onChange={set('stage_notes')} />
               </Field>
             )}
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Start Date (optional)" id="d-start"><Input id="d-start" type="date" value={form.start_date} onChange={set('start_date')} /></Field>
-              <Field label="End Date (optional)" id="d-end"><Input id="d-end" type="date" value={form.end_date} onChange={set('end_date')} /></Field>
+              <Field label={t.form.startDate + opt} id="d-start"><Input id="d-start" type="date" value={form.start_date} onChange={set('start_date')} /></Field>
+              <Field label={t.form.endDate + opt} id="d-end"><Input id="d-end" type="date" value={form.end_date} onChange={set('end_date')} /></Field>
             </div>
-            <Field label="Registration Deadline (optional)" id="d-deadline"><Input id="d-deadline" type="date" value={form.registration_deadline} onChange={set('registration_deadline')} /></Field>
+            <Field label={t.form.registrationDeadline + opt} id="d-deadline"><Input id="d-deadline" type="date" value={form.registration_deadline} onChange={set('registration_deadline')} /></Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Prize Pool (RM, optional)" id="d-prize"><Input id="d-prize" type="number" min={0} value={form.prize_pool_rm} onChange={set('prize_pool_rm')} /></Field>
-              <Field label="Max Teams (optional)" id="d-teams"><Input id="d-teams" type="number" min={2} value={form.max_teams} onChange={set('max_teams')} /></Field>
+              <Field label={t.form.prizePoolRM + opt} id="d-prize"><Input id="d-prize" type="number" min={0} value={form.prize_pool_rm} onChange={set('prize_pool_rm')} /></Field>
+              <Field label={t.form.maxTeams + opt} id="d-teams"><Input id="d-teams" type="number" min={2} value={form.max_teams} onChange={set('max_teams')} /></Field>
             </div>
-            <Field label="Additional Prizes (optional, comma separated)" id="d-extras"><Input id="d-extras" placeholder="e.g. Trophy, Jersey" value={form.additional_prizes} onChange={set('additional_prizes')} /></Field>
-            <Field label="Prize Breakdown (optional)" id="d-prize-breakdown">
+            <Field label={t.form.additionalPrizes + opt} id="d-extras"><Input id="d-extras" placeholder={t.form.additionalPrizesPlaceholder} value={form.additional_prizes} onChange={set('additional_prizes')} /></Field>
+            <Field label={t.form.prizeBreakdown + opt} id="d-prize-breakdown">
               <PrizeBreakdownEditor items={prizeBreakdown} onChange={setPrizeBreakdown} />
             </Field>
-            <Field label="Registration Link (optional)" id="d-reglink"><Input id="d-reglink" type="url" value={form.registration_link} onChange={set('registration_link')} /></Field>
-            <Field label="Banner Image (optional)" id="d-banner-file">
+            <Field label={t.form.registrationLink + opt} id="d-reglink"><Input id="d-reglink" type="url" value={form.registration_link} onChange={set('registration_link')} /></Field>
+            <Field label={t.form.bannerImage + opt} id="d-banner-file">
               {form.banner_image && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={form.banner_image} alt="Banner preview" className="mb-2 h-32 w-full rounded-md border border-border object-cover" />
               )}
               <Input id="d-banner-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={bannerUploading} onChange={handleBannerUpload} />
-              {bannerUploading && <p className="mt-1 text-xs text-muted-foreground">Uploading…</p>}
+              {bannerUploading && <p className="mt-1 text-xs text-muted-foreground">{t.form.uploading}</p>}
               {bannerError && <p className="mt-1 text-xs text-red-500">{bannerError}</p>}
-              <Input id="d-banner" type="url" placeholder="…or paste an image URL" className="mt-2" value={form.banner_image} onChange={set('banner_image')} />
+              <Input id="d-banner" type="url" placeholder={t.form.orPasteUrl} className="mt-2" value={form.banner_image} onChange={set('banner_image')} />
             </Field>
             <div className="border-t pt-4">
-              <p className="mb-3 font-semibold text-sm">Organiser Info (optional)</p>
+              <p className="mb-3 font-semibold text-sm">{t.form.organiserInfo + opt}</p>
               <div className="space-y-4">
-                <Field label="Organiser Name" id="d-orgname"><Input id="d-orgname" maxLength={100} value={form.organiser_name} onChange={set('organiser_name')} /></Field>
-                <Field label="Contact (WhatsApp / email)" id="d-orgcontact"><Input id="d-orgcontact" maxLength={100} value={form.organiser_contact} onChange={set('organiser_contact')} /></Field>
-                <Field label="Organiser Email" id="d-orgemail"><Input id="d-orgemail" type="email" value={form.organiser_email} onChange={set('organiser_email')} /></Field>
+                <Field label={t.form.organiserName} id="d-orgname"><Input id="d-orgname" maxLength={100} value={form.organiser_name} onChange={set('organiser_name')} /></Field>
+                <Field label={t.form.contactWhatsappEmail} id="d-orgcontact"><Input id="d-orgcontact" maxLength={100} value={form.organiser_contact} onChange={set('organiser_contact')} /></Field>
+                <Field label={t.form.organiserEmail} id="d-orgemail"><Input id="d-orgemail" type="email" value={form.organiser_email} onChange={set('organiser_email')} /></Field>
               </div>
             </div>
             {formError && <p className="text-sm text-red-500">{formError}</p>}
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>{t.common.cancel}</Button>
+              <Button type="submit" disabled={saving}>{saving ? t.common.saving : t.common.save}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -328,14 +337,6 @@ export default function AdminTournamentsPage() {
       <AdminTournamentsContent />
     </ProtectedRoute>
   )
-}
-
-function formatCell(t: Tournament) {
-  if (!t.format) return 'TBD'
-  if ((t.format === 'offline' || t.format === 'hybrid') && t.state) {
-    return `${t.format.charAt(0).toUpperCase() + t.format.slice(1)} · ${t.state}`
-  }
-  return t.format.charAt(0).toUpperCase() + t.format.slice(1)
 }
 
 function Field({ label, id, children }: { label: string; id: string; children: React.ReactNode }) {

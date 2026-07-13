@@ -6,14 +6,8 @@ import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useLang, type Lang } from '@/lib/i18n'
 import { Menu, X } from 'lucide-react'
-
-const NAV_LINKS = [
-  { to: '/tournaments', label: 'Tournaments' },
-  { to: '/docs',  label: 'Docs'  },
-  { to: '/qna',   label: 'Q&A'   },
-  { to: '/about', label: 'About' },
-]
 
 // `floating` renders the navbar as a rounded pill hovering over the page
 // (used on the landing page, over the scenic background) instead of the
@@ -21,9 +15,17 @@ const NAV_LINKS = [
 export default function Navbar({ floating = false }: { floating?: boolean }) {
   const pathname    = usePathname()
   const router      = useRouter()
+  const { t }       = useLang()
   const isAdmin     = pathname?.startsWith('/admin') ?? false
   const isOrganiser = pathname?.startsWith('/organiser') ?? false
   const [open, setOpen] = useState(false)
+
+  const NAV_LINKS = [
+    { to: '/tournaments', label: t.nav.tournaments },
+    { to: '/docs',  label: t.nav.docs  },
+    { to: '/qna',   label: t.nav.qna   },
+    { to: '/about', label: t.nav.about },
+  ]
 
   function handleLogout() {
     localStorage.removeItem('admin_token')
@@ -86,25 +88,26 @@ export default function Navbar({ floating = false }: { floating?: boolean }) {
           <nav className="hidden items-center gap-3 shrink-0 lg:flex">
             {isAdmin ? (
               <>
-                <Link href="/admin/dashboard"><Button variant="ghost" size="sm">Pending</Button></Link>
-                <Link href="/admin/tournaments"><Button variant="ghost" size="sm">Tournaments</Button></Link>
-                <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
+                <Link href="/admin/dashboard"><Button variant="ghost" size="sm">{t.nav.pending}</Button></Link>
+                <Link href="/admin/tournaments"><Button variant="ghost" size="sm">{t.nav.tournaments}</Button></Link>
+                <Button variant="outline" size="sm" onClick={handleLogout}>{t.common.logout}</Button>
               </>
             ) : isOrganiser ? (
               <>
-                <Link href="/organiser/dashboard"><Button variant="ghost" size="sm">My Tournaments</Button></Link>
-                <Link href="/organiser/tournaments/new"><Button size="sm">New Tournament</Button></Link>
-                <Button variant="outline" size="sm" onClick={handleOrganiserLogout}>Logout</Button>
+                <Link href="/organiser/dashboard"><Button variant="ghost" size="sm">{t.nav.myTournaments}</Button></Link>
+                <Link href="/organiser/tournaments/new"><Button size="sm">{t.nav.newTournament}</Button></Link>
+                <Button variant="outline" size="sm" onClick={handleOrganiserLogout}>{t.common.logout}</Button>
               </>
             ) : (
               <>
-                <Link href="/submit"><Button variant="outline" size="sm">Submit Tournament</Button></Link>
-                <Link href="/organiser/login"><Button variant="ghost" size="sm">Organisers</Button></Link>
+                <Link href="/submit"><Button variant="outline" size="sm">{t.nav.submitTournament}</Button></Link>
+                <Link href="/organiser/login"><Button variant="ghost" size="sm">{t.nav.organisers}</Button></Link>
                 <Link href="/admin/login">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground">Admin</Button>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground">{t.nav.admin}</Button>
                 </Link>
               </>
             )}
+            <LanguageToggle />
           </nav>
 
           {/* Hamburger — visible on mobile only */}
@@ -133,24 +136,24 @@ export default function Navbar({ floating = false }: { floating?: boolean }) {
           <div className="mx-auto max-w-6xl space-y-1 px-4 py-3">
             {isAdmin ? (
               <>
-                <MobileLink href="/admin/dashboard"   label="Pending"       onClick={close} />
-                <MobileLink href="/admin/tournaments" label="Tournaments"   onClick={close} />
+                <MobileLink href="/admin/dashboard"   label={t.nav.pending}       onClick={close} />
+                <MobileLink href="/admin/tournaments" label={t.nav.tournaments}   onClick={close} />
                 <button
                   onClick={handleLogout}
                   className="w-full rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
-                  Logout
+                  {t.common.logout}
                 </button>
               </>
             ) : isOrganiser ? (
               <>
-                <MobileLink href="/organiser/dashboard"        label="My Tournaments" onClick={close} />
-                <MobileLink href="/organiser/tournaments/new"  label="New Tournament" onClick={close} primary />
+                <MobileLink href="/organiser/dashboard"        label={t.nav.myTournaments} onClick={close} />
+                <MobileLink href="/organiser/tournaments/new"  label={t.nav.newTournament} onClick={close} primary />
                 <button
                   onClick={handleOrganiserLogout}
                   className="w-full rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
-                  Logout
+                  {t.common.logout}
                 </button>
               </>
             ) : (
@@ -159,16 +162,57 @@ export default function Navbar({ floating = false }: { floating?: boolean }) {
                   <MobileLink key={to} href={to} label={label} onClick={close} active={pathname === to} />
                 ))}
                 <div className="border-t border-border pt-2 space-y-1">
-                  <MobileLink href="/submit" label="Submit Tournament" onClick={close} primary />
-                  <MobileLink href="/organiser/login" label="Organisers" onClick={close} />
-                  <MobileLink href="/admin/login" label="Admin" onClick={close} />
+                  <MobileLink href="/submit" label={t.nav.submitTournament} onClick={close} primary />
+                  <MobileLink href="/organiser/login" label={t.nav.organisers} onClick={close} />
+                  <MobileLink href="/admin/login" label={t.nav.admin} onClick={close} />
                 </div>
               </>
             )}
+
+            {/* Language toggle — always present at the bottom of the mobile menu */}
+            <div className="border-t border-border pt-3">
+              <div className="flex items-center justify-between px-3">
+                <span className="text-sm font-medium text-muted-foreground">{t.nav.languageLabel}</span>
+                <LanguageToggle />
+              </div>
+            </div>
           </div>
         </div>
       )}
     </header>
+  )
+}
+
+// EN / BM segmented switch. Persists via the LanguageProvider (localStorage).
+function LanguageToggle() {
+  const { lang, setLang } = useLang()
+  const options: { value: Lang; label: string }[] = [
+    { value: 'en', label: 'EN' },
+    { value: 'ms', label: 'BM' },
+  ]
+  return (
+    <div
+      role="group"
+      aria-label="Language"
+      className="inline-flex shrink-0 items-center rounded-full border border-border bg-background/80 p-0.5"
+    >
+      {options.map(({ value, label }) => (
+        <button
+          key={value}
+          type="button"
+          onClick={() => setLang(value)}
+          aria-pressed={lang === value}
+          className={cn(
+            'rounded-full px-2.5 py-1 text-xs font-semibold transition-colors',
+            lang === value
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
   )
 }
 

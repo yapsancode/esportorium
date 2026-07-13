@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { apiFetch, getValidOrganiserToken, ApiError, NetworkError } from '@/lib/api'
+import { useLang } from '@/lib/i18n'
 
 // Only allow redirecting back to internal organiser paths — never an
 // attacker-supplied absolute URL (open-redirect guard).
@@ -21,6 +22,7 @@ function safeNext(): string {
 
 export default function OrganiserLogin() {
   const router = useRouter()
+  const { t } = useLang()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -44,11 +46,11 @@ export default function OrganiserLogin() {
       router.push(safeNext())
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        setError('Invalid email or password.')
+        setError(t.organiser.invalidCredentials)
       } else if (err instanceof NetworkError) {
-        setError("Can't reach the server. Check your connection and try again.")
+        setError(t.organiser.cantReachServer)
       } else {
-        setError('Something went wrong. Please try again.')
+        setError(t.organiser.somethingWrong)
       }
       setLoading(false)
     }
@@ -57,23 +59,23 @@ export default function OrganiserLogin() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Link href="/" className="absolute top-5 left-5 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="h-4 w-4" /> Back to home
+        <ArrowLeft className="h-4 w-4" /> {t.common.backToHome}
       </Link>
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center items-center">
           <Image src="/esportorium-logo.png" alt="Esportorium" width={48} height={48} className="mb-2 h-12 w-12 rounded-lg" />
-          <CardTitle className="text-2xl font-extrabold">Organiser login</CardTitle>
-          <CardDescription>Manage your tournament listings</CardDescription>
+          <CardTitle className="text-2xl font-extrabold">{t.organiser.loginTitle}</CardTitle>
+          <CardDescription>{t.organiser.loginSubtitle}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" autoComplete="email" placeholder="you@example.com"
+              <Label htmlFor="email">{t.common.email}</Label>
+              <Input id="email" type="email" autoComplete="email" placeholder={t.organiser.emailPlaceholder}
                 value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.common.password}</Label>
               <div className="relative">
                 <Input id="password" type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password" value={password}
@@ -87,12 +89,12 @@ export default function OrganiserLogin() {
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Logging in…' : 'Log in'}
+              {loading ? t.common.loggingIn : t.common.logIn}
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            New here?{' '}
-            <Link href="/organiser/signup" className="font-medium text-primary hover:underline">Create an account</Link>
+            {t.organiser.newHere}{' '}
+            <Link href="/organiser/signup" className="font-medium text-primary hover:underline">{t.organiser.createAccount}</Link>
           </p>
         </CardContent>
       </Card>

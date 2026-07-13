@@ -1,10 +1,14 @@
+'use client'
+
 import Link from 'next/link'
 import { Separator } from '@/components/ui/separator'
+import { useLang } from '@/lib/i18n'
 
 const DISCORD_URL = 'https://discord.gg/XufVXcbS'
 const TELEGRAM_URL = 'https://t.me/esportorium'
 
 export default function Footer() {
+  const { t } = useLang()
   const year = new Date().getFullYear()
 
   return (
@@ -13,12 +17,8 @@ export default function Footer() {
 
         <div className="mb-8 rounded-lg bg-muted/60 px-5 py-4">
           <p className="text-xs leading-relaxed text-muted-foreground">
-            <strong className="font-semibold text-foreground">Disclaimer:</strong>{' '}
-            Esportorium is an open discovery platform. We list tournaments for informational
-            purposes only and do not host, organise, or guarantee any listed events. Tournament
-            details (including prize pools and registration deadlines) are provided by organisers
-            and have not been independently verified. Players participate at their own risk.
-            Esportorium is not liable for any disputes arising from listed events.
+            <strong className="font-semibold text-foreground">{t.footer.disclaimerLabel}</strong>{' '}
+            {t.footer.disclaimer}
           </p>
         </div>
 
@@ -27,15 +27,15 @@ export default function Footer() {
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="font-extrabold tracking-tight text-foreground">Esportorium</p>
-            <p className="mt-1 text-xs text-muted-foreground">Malaysia's curated esports tournament platform.</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t.footer.tagline}</p>
             <div className="mt-4">
-              <p className="mb-2 text-xs font-medium text-foreground">Join the community</p>
+              <p className="mb-2 text-xs font-medium text-foreground">{t.footer.joinCommunity}</p>
               <div className="flex gap-2.5">
                 <a
                   href={DISCORD_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Join our Discord"
+                  aria-label={t.footer.joinDiscord}
                   className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
                 >
                   <DiscordIcon className="h-4 w-4" />
@@ -44,7 +44,7 @@ export default function Footer() {
                   href={TELEGRAM_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Join our Telegram"
+                  aria-label={t.footer.joinTelegram}
                   className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
                 >
                   <TelegramIcon className="h-4 w-4" />
@@ -54,20 +54,20 @@ export default function Footer() {
           </div>
 
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <Link href="/"       className="hover:text-foreground transition-colors">Home</Link>
-            <Link href="/tournaments" className="hover:text-foreground transition-colors">Tournaments</Link>
-            <Link href="/submit" className="hover:text-foreground transition-colors">Submit</Link>
-            <Link href="/organiser/login" className="hover:text-foreground transition-colors">Organiser</Link>
-            <Link href="/docs"   className="hover:text-foreground transition-colors">Docs</Link>
-            <Link href="/qna"    className="hover:text-foreground transition-colors">Q&amp;A</Link>
-            <Link href="/about"  className="hover:text-foreground transition-colors">About</Link>
-            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-            <a href="mailto:team.iidevstudio@gmail.com" className="hover:text-foreground transition-colors">Contact</a>
+            <Link href="/"       className="hover:text-foreground transition-colors">{t.footer.home}</Link>
+            <Link href="/tournaments" className="hover:text-foreground transition-colors">{t.footer.tournaments}</Link>
+            <Link href="/submit" className="hover:text-foreground transition-colors">{t.footer.submit}</Link>
+            <Link href="/organiser/login" className="hover:text-foreground transition-colors">{t.footer.organiser}</Link>
+            <Link href="/docs"   className="hover:text-foreground transition-colors">{t.footer.docs}</Link>
+            <Link href="/qna"    className="hover:text-foreground transition-colors">{t.footer.qna}</Link>
+            <Link href="/about"  className="hover:text-foreground transition-colors">{t.footer.about}</Link>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">{t.footer.privacy}</Link>
+            <a href="mailto:team.iidevstudio@gmail.com" className="hover:text-foreground transition-colors">{t.footer.contact}</a>
           </nav>
         </div>
 
         <p className="mt-8 text-xs text-muted-foreground">
-          &copy; {year} Esportorium · Built by{' '}
+          &copy; {year} Esportorium · {t.footer.builtBy}{' '}
           <a href="https://www.iidevstudio.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
             iidev Studio
           </a>
