@@ -48,7 +48,6 @@ const INITIAL = {
 
 export default function Submit() {
   const { t } = useLang()
-  const opt = ` ${t.common.optional}`
   const [form, setForm] = useState(INITIAL)
   const [prizeBreakdown, setPrizeBreakdown] = useState<PrizeBreakdownItem[]>([])
   const [turnstileToken, setTurnstileToken] = useState('')
@@ -218,11 +217,11 @@ export default function Submit() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
 
-              <FormField label={t.form.tournamentName} id="title">
+              <FormField label={t.form.tournamentName} id="title" required>
                 <Input id="title" placeholder={t.form.tournamentNamePlaceholder} maxLength={200} required value={form.title} onChange={set('title')} />
               </FormField>
 
-              <FormField label={t.form.descriptionRules + opt} id="description">
+              <FormField label={t.form.descriptionRules} id="description">
                 <Textarea
                   id="description"
                   placeholder={t.form.descriptionPlaceholder}
@@ -233,7 +232,7 @@ export default function Submit() {
                 />
               </FormField>
 
-              <FormField label={t.form.format + opt} id="format">
+              <FormField label={t.form.format} id="format">
                 <Select value={form.format} onValueChange={setSelect('format')}>
                   <SelectTrigger id="format">
                     <SelectValue placeholder={t.form.selectFormat} />
@@ -248,7 +247,7 @@ export default function Submit() {
 
               {(form.format === 'offline' || form.format === 'hybrid') && (
                 <>
-                  <FormField label={t.form.state} id="state">
+                  <FormField label={t.form.state} id="state" required>
                     <Select required value={form.state} onValueChange={setSelect('state')}>
                       <SelectTrigger id="state">
                         <SelectValue placeholder={t.form.selectState} />
@@ -268,46 +267,46 @@ export default function Submit() {
               )}
 
               {form.format === 'hybrid' && (
-                <FormField label={t.form.stageBreakdown + opt} id="stage_notes">
+                <FormField label={t.form.stageBreakdown} id="stage_notes">
                   <Input id="stage_notes" placeholder={t.form.stageBreakdownPlaceholder} maxLength={300} value={form.stage_notes} onChange={set('stage_notes')} />
                 </FormField>
               )}
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <FormField label={t.form.startDate + opt} id="start_date">
+                <FormField label={t.form.startDate} id="start_date">
                   <Input id="start_date" type="date" value={form.start_date} onChange={set('start_date')} />
                 </FormField>
-                <FormField label={t.form.endDate + opt} id="end_date">
+                <FormField label={t.form.endDate} id="end_date">
                   <Input id="end_date" type="date" value={form.end_date} onChange={set('end_date')} />
                 </FormField>
               </div>
 
-              <FormField label={t.form.registrationDeadline + opt} id="registration_deadline">
+              <FormField label={t.form.registrationDeadline} id="registration_deadline">
                 <Input id="registration_deadline" type="date" value={form.registration_deadline} onChange={set('registration_deadline')} />
               </FormField>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <FormField label={t.form.prizePoolRM + opt} id="prize_pool_rm">
+                <FormField label={t.form.prizePoolRM} id="prize_pool_rm">
                   <Input id="prize_pool_rm" type="number" min={0} placeholder={t.form.prizePoolPlaceholder} value={form.prize_pool_rm} onChange={set('prize_pool_rm')} />
                 </FormField>
-                <FormField label={t.form.maxTeams + opt} id="max_teams">
+                <FormField label={t.form.maxTeams} id="max_teams">
                   <Input id="max_teams" type="number" min={2} placeholder={t.form.maxTeamsPlaceholder} value={form.max_teams} onChange={set('max_teams')} />
                 </FormField>
               </div>
 
-              <FormField label={t.form.additionalPrizes + opt} id="additional_prizes">
+              <FormField label={t.form.additionalPrizes} id="additional_prizes">
                 <Input id="additional_prizes" placeholder={t.form.additionalPrizesPlaceholder} value={form.additional_prizes} onChange={set('additional_prizes')} />
               </FormField>
 
-              <FormField label={t.form.prizeBreakdown + opt} id="prize_breakdown">
+              <FormField label={t.form.prizeBreakdown} id="prize_breakdown">
                 <PrizeBreakdownEditor items={prizeBreakdown} onChange={setPrizeBreakdown} />
               </FormField>
 
-              <FormField label={t.form.registrationLink + opt} id="registration_link">
+              <FormField label={t.form.registrationLink} id="registration_link">
                 <Input id="registration_link" type="url" placeholder="https://forms.gle/..." value={form.registration_link} onChange={set('registration_link')} />
               </FormField>
 
-              <FormField label={t.form.bannerImage + opt} id="banner_image">
+              <FormField label={t.form.bannerImage} id="banner_image">
                 {form.banner_image ? (
                   <div className="space-y-2">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -335,13 +334,13 @@ export default function Submit() {
               <div className="border-t border-border pt-6">
                 <h3 className="mb-4 font-semibold">{t.form.organiserInfo}</h3>
                 <div className="space-y-4">
-                  <FormField label={t.form.organiserName + opt} id="organiser_name">
+                  <FormField label={t.form.organiserName} id="organiser_name">
                     <Input id="organiser_name" placeholder={t.form.organiserNamePlaceholder} maxLength={100} value={form.organiser_name} onChange={set('organiser_name')} />
                   </FormField>
-                  <FormField label={t.form.contactWhatsappEmail + opt} id="organiser_contact">
+                  <FormField label={t.form.contactWhatsappEmail} id="organiser_contact">
                     <Input id="organiser_contact" placeholder={t.form.contactPlaceholder} maxLength={100} value={form.organiser_contact} onChange={set('organiser_contact')} />
                   </FormField>
-                  <FormField label={t.form.organiserEmail + opt} id="organiser_email">
+                  <FormField label={t.form.organiserEmail} id="organiser_email">
                     <Input id="organiser_email" type="email" placeholder={t.form.organiserEmailPlaceholder} value={form.organiser_email} onChange={set('organiser_email')} />
                   </FormField>
                 </div>
@@ -376,10 +375,13 @@ export default function Submit() {
   )
 }
 
-function FormField({ label, id, children }: { label: string; id: string; children: React.ReactNode }) {
+function FormField({ label, id, required, children }: { label: string; id: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </Label>
       {children}
     </div>
   )

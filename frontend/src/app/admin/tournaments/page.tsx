@@ -84,7 +84,6 @@ function toPayload(form: FormState, prizeBreakdown: PrizeBreakdownItem[]) {
 function AdminTournamentsContent() {
   const router = useRouter()
   const { t } = useLang()
-  const opt = ` ${t.common.optional}`
   const fmtLabel = (format: string | null, state: string | null) => {
     if (!format) return t.status.tbd
     const fmtMap: Record<string, string> = { online: t.format.online, offline: t.format.offline, hybrid: t.format.hybrid }
@@ -257,11 +256,11 @@ function AdminTournamentsContent() {
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader><DialogTitle>{editing ? t.admin.editTournament : t.admin.addTournament}</DialogTitle></DialogHeader>
           <form onSubmit={handleSave} className="space-y-4 py-2">
-            <Field label={t.form.tournamentName} id="d-title"><Input id="d-title" required maxLength={200} value={form.title} onChange={set('title')} /></Field>
-            <Field label={t.form.descriptionRules + opt} id="d-description">
+            <Field label={t.form.tournamentName} id="d-title" required><Input id="d-title" required maxLength={200} value={form.title} onChange={set('title')} /></Field>
+            <Field label={t.form.descriptionRules} id="d-description">
               <Textarea id="d-description" maxLength={2000} rows={4} value={form.description} onChange={set('description')} />
             </Field>
-            <Field label={t.form.format + opt} id="d-format">
+            <Field label={t.form.format} id="d-format">
               <Select value={form.format} onValueChange={setSelect('format')}>
                 <SelectTrigger id="d-format"><SelectValue placeholder={t.form.selectFormat} /></SelectTrigger>
                 <SelectContent>
@@ -273,35 +272,35 @@ function AdminTournamentsContent() {
             </Field>
             {(form.format === 'offline' || form.format === 'hybrid') && (
               <>
-                <Field label={t.form.state} id="d-state">
+                <Field label={t.form.state} id="d-state" required>
                   <Select required value={form.state} onValueChange={setSelect('state')}>
                     <SelectTrigger id="d-state"><SelectValue placeholder={t.form.selectState} /></SelectTrigger>
                     <SelectContent>{STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>
                 </Field>
-                <Field label={t.form.venue + opt} id="d-venue"><Input id="d-venue" maxLength={300} value={form.venue} onChange={set('venue')} /></Field>
+                <Field label={t.form.venue} id="d-venue"><Input id="d-venue" maxLength={300} value={form.venue} onChange={set('venue')} /></Field>
               </>
             )}
             {form.format === 'hybrid' && (
-              <Field label={t.form.stageBreakdown + opt} id="d-stage-notes">
+              <Field label={t.form.stageBreakdown} id="d-stage-notes">
                 <Input id="d-stage-notes" placeholder={t.form.stageBreakdownPlaceholder} maxLength={300} value={form.stage_notes} onChange={set('stage_notes')} />
               </Field>
             )}
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={t.form.startDate + opt} id="d-start"><Input id="d-start" type="date" value={form.start_date} onChange={set('start_date')} /></Field>
-              <Field label={t.form.endDate + opt} id="d-end"><Input id="d-end" type="date" value={form.end_date} onChange={set('end_date')} /></Field>
+              <Field label={t.form.startDate} id="d-start"><Input id="d-start" type="date" value={form.start_date} onChange={set('start_date')} /></Field>
+              <Field label={t.form.endDate} id="d-end"><Input id="d-end" type="date" value={form.end_date} onChange={set('end_date')} /></Field>
             </div>
-            <Field label={t.form.registrationDeadline + opt} id="d-deadline"><Input id="d-deadline" type="date" value={form.registration_deadline} onChange={set('registration_deadline')} /></Field>
+            <Field label={t.form.registrationDeadline} id="d-deadline"><Input id="d-deadline" type="date" value={form.registration_deadline} onChange={set('registration_deadline')} /></Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={t.form.prizePoolRM + opt} id="d-prize"><Input id="d-prize" type="number" min={0} value={form.prize_pool_rm} onChange={set('prize_pool_rm')} /></Field>
-              <Field label={t.form.maxTeams + opt} id="d-teams"><Input id="d-teams" type="number" min={2} value={form.max_teams} onChange={set('max_teams')} /></Field>
+              <Field label={t.form.prizePoolRM} id="d-prize"><Input id="d-prize" type="number" min={0} value={form.prize_pool_rm} onChange={set('prize_pool_rm')} /></Field>
+              <Field label={t.form.maxTeams} id="d-teams"><Input id="d-teams" type="number" min={2} value={form.max_teams} onChange={set('max_teams')} /></Field>
             </div>
-            <Field label={t.form.additionalPrizes + opt} id="d-extras"><Input id="d-extras" placeholder={t.form.additionalPrizesPlaceholder} value={form.additional_prizes} onChange={set('additional_prizes')} /></Field>
-            <Field label={t.form.prizeBreakdown + opt} id="d-prize-breakdown">
+            <Field label={t.form.additionalPrizes} id="d-extras"><Input id="d-extras" placeholder={t.form.additionalPrizesPlaceholder} value={form.additional_prizes} onChange={set('additional_prizes')} /></Field>
+            <Field label={t.form.prizeBreakdown} id="d-prize-breakdown">
               <PrizeBreakdownEditor items={prizeBreakdown} onChange={setPrizeBreakdown} />
             </Field>
-            <Field label={t.form.registrationLink + opt} id="d-reglink"><Input id="d-reglink" type="url" value={form.registration_link} onChange={set('registration_link')} /></Field>
-            <Field label={t.form.bannerImage + opt} id="d-banner-file">
+            <Field label={t.form.registrationLink} id="d-reglink"><Input id="d-reglink" type="url" value={form.registration_link} onChange={set('registration_link')} /></Field>
+            <Field label={t.form.bannerImage} id="d-banner-file">
               {form.banner_image && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={form.banner_image} alt="Banner preview" className="mb-2 h-32 w-full rounded-md border border-border object-cover" />
@@ -312,7 +311,7 @@ function AdminTournamentsContent() {
               <Input id="d-banner" type="url" placeholder={t.form.orPasteUrl} className="mt-2" value={form.banner_image} onChange={set('banner_image')} />
             </Field>
             <div className="border-t pt-4">
-              <p className="mb-3 font-semibold text-sm">{t.form.organiserInfo + opt}</p>
+              <p className="mb-3 font-semibold text-sm">{t.form.organiserInfo}</p>
               <div className="space-y-4">
                 <Field label={t.form.organiserName} id="d-orgname"><Input id="d-orgname" maxLength={100} value={form.organiser_name} onChange={set('organiser_name')} /></Field>
                 <Field label={t.form.contactWhatsappEmail} id="d-orgcontact"><Input id="d-orgcontact" maxLength={100} value={form.organiser_contact} onChange={set('organiser_contact')} /></Field>
@@ -339,10 +338,13 @@ export default function AdminTournamentsPage() {
   )
 }
 
-function Field({ label, id, children }: { label: string; id: string; children: React.ReactNode }) {
+function Field({ label, id, required, children }: { label: string; id: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </Label>
       {children}
     </div>
   )
