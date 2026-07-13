@@ -11,10 +11,12 @@ import { Badge } from '@/components/ui/badge'
 import { AlertCircle, ArrowLeft } from 'lucide-react'
 import TournamentForm, { tournamentToForm, type TournamentFormValues } from '@/components/TournamentForm'
 import { organiserFetch, ApiError } from '@/lib/api'
+import { useLang } from '@/lib/i18n'
 import type { Tournament, PrizeBreakdownItem } from '@/lib/types'
 
 function EditContent() {
   const router = useRouter()
+  const { t } = useLang()
   const params = useParams()
   const id = params.id as string
 
@@ -39,9 +41,9 @@ function EditContent() {
           localStorage.removeItem('organiser_token')
           router.push('/organiser/login')
         } else if (err instanceof ApiError && err.status === 404) {
-          setLoadError('This tournament was not found, or it is not yours to edit.')
+          setLoadError(t.organiser.editNotFound)
         } else {
-          setLoadError('Failed to load this tournament.')
+          setLoadError(t.organiser.editLoadFailed)
         }
       }
     }
@@ -62,11 +64,11 @@ function EditContent() {
         localStorage.removeItem('organiser_token')
         router.push('/organiser/login')
       } else if (err instanceof ApiError && err.status === 404) {
-        setSaveError('This tournament is no longer available.')
+        setSaveError(t.organiser.editNoLongerAvailable)
       } else if (err instanceof ApiError && err.status === 422) {
-        setSaveError('Some fields are invalid. Please review and try again.')
+        setSaveError(t.organiser.saveInvalid)
       } else {
-        setSaveError('Failed to save. Please try again.')
+        setSaveError(t.organiser.saveFailed)
       }
       setSaving(false)
     }
@@ -77,7 +79,7 @@ function EditContent() {
       <Navbar />
       <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
         <Link href="/organiser/dashboard" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back to my tournaments
+          <ArrowLeft className="h-4 w-4" /> {t.organiser.backToMyTournaments}
         </Link>
 
         {loadError ? (
@@ -86,31 +88,31 @@ function EditContent() {
               <AlertCircle className="mx-auto mb-3 h-8 w-8 text-red-500" />
               <p className="text-muted-foreground">{loadError}</p>
               <Link href="/organiser/dashboard">
-                <Button className="mt-4" variant="outline">Back to dashboard</Button>
+                <Button className="mt-4" variant="outline">{t.organiser.backToDashboard}</Button>
               </Link>
             </CardContent>
           </Card>
         ) : !initialForm ? (
-          <p className="py-12 text-center text-muted-foreground">Loading…</p>
+          <p className="py-12 text-center text-muted-foreground">{t.common.loading}</p>
         ) : (
           <>
             <div className="mb-8 flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-extrabold text-foreground">Edit Tournament</h1>
+              <h1 className="text-3xl font-extrabold text-foreground">{t.organiser.editTitle}</h1>
               {approved
-                ? <Badge>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>
-                : <Badge variant="secondary">Pending review</Badge>}
+                ? <Badge>{(t.status as Record<string, string>)[status] ?? status}</Badge>
+                : <Badge variant="secondary">{t.status.pendingReview}</Badge>}
             </div>
 
             {approved && (
               <p className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800">
-                This tournament is already live. Saving changes updates the public listing immediately.
+                {t.organiser.editLiveWarning}
               </p>
             )}
 
             <Card>
               <CardHeader>
-                <CardTitle>Tournament Details</CardTitle>
-                <CardDescription>Update any field and save your changes.</CardDescription>
+                <CardTitle>{t.organiser.detailsCardTitle}</CardTitle>
+                <CardDescription>{t.organiser.detailsCardDescEdit}</CardDescription>
               </CardHeader>
               <CardContent>
                 {saveError && (
@@ -121,8 +123,8 @@ function EditContent() {
                 <TournamentForm
                   initialForm={initialForm}
                   initialPrizeBreakdown={prizeBreakdown}
-                  submitLabel="Save Changes"
-                  loadingLabel="Saving…"
+                  submitLabel={t.organiser.saveChanges}
+                  loadingLabel={t.common.saving}
                   loading={saving}
                   onSubmit={handleSubmit}
                 />
