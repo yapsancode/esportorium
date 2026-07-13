@@ -217,11 +217,11 @@ export default function Submit() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
 
-              <FormField label="Tournament Name" id="title">
+              <FormField label="Tournament Name" id="title" required>
                 <Input id="title" placeholder="e.g. ML Warriors Open 2025" maxLength={200} required value={form.title} onChange={set('title')} />
               </FormField>
 
-              <FormField label="Description / Rules (optional)" id="description">
+              <FormField label="Description / Rules" id="description">
                 <Textarea
                   id="description"
                   placeholder="e.g. Open to Malaysian players only. Must be Mythic rank or above. Bring your own device."
@@ -232,7 +232,7 @@ export default function Submit() {
                 />
               </FormField>
 
-              <FormField label="Format (optional)" id="format">
+              <FormField label="Format" id="format">
                 <Select value={form.format} onValueChange={setSelect('format')}>
                   <SelectTrigger id="format">
                     <SelectValue placeholder="Select format" />
@@ -267,46 +267,46 @@ export default function Submit() {
               )}
 
               {form.format === 'hybrid' && (
-                <FormField label="Stage Breakdown (optional)" id="stage_notes">
+                <FormField label="Stage Breakdown" id="stage_notes">
                   <Input id="stage_notes" placeholder="e.g. Group stage online, playoffs offline in KL" maxLength={300} value={form.stage_notes} onChange={set('stage_notes')} />
                 </FormField>
               )}
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <FormField label="Start Date (optional)" id="start_date">
+                <FormField label="Start Date" id="start_date">
                   <Input id="start_date" type="date" value={form.start_date} onChange={set('start_date')} />
                 </FormField>
-                <FormField label="End Date (optional)" id="end_date">
+                <FormField label="End Date" id="end_date">
                   <Input id="end_date" type="date" value={form.end_date} onChange={set('end_date')} />
                 </FormField>
               </div>
 
-              <FormField label="Registration Deadline (optional)" id="registration_deadline">
+              <FormField label="Registration Deadline" id="registration_deadline">
                 <Input id="registration_deadline" type="date" value={form.registration_deadline} onChange={set('registration_deadline')} />
               </FormField>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <FormField label="Prize Pool (RM) (optional)" id="prize_pool_rm">
+                <FormField label="Prize Pool (RM)" id="prize_pool_rm">
                   <Input id="prize_pool_rm" type="number" min={0} placeholder="e.g. 500" value={form.prize_pool_rm} onChange={set('prize_pool_rm')} />
                 </FormField>
-                <FormField label="Max Teams (optional)" id="max_teams">
+                <FormField label="Max Teams" id="max_teams">
                   <Input id="max_teams" type="number" min={2} placeholder="e.g. 16" value={form.max_teams} onChange={set('max_teams')} />
                 </FormField>
               </div>
 
-              <FormField label="Additional Prizes (optional)" id="additional_prizes">
+              <FormField label="Additional Prizes" id="additional_prizes">
                 <Input id="additional_prizes" placeholder="e.g. Trophy, Jersey (comma separated)" value={form.additional_prizes} onChange={set('additional_prizes')} />
               </FormField>
 
-              <FormField label="Prize Breakdown (optional)" id="prize_breakdown">
+              <FormField label="Prize Breakdown" id="prize_breakdown">
                 <PrizeBreakdownEditor items={prizeBreakdown} onChange={setPrizeBreakdown} />
               </FormField>
 
-              <FormField label="Registration Link (optional)" id="registration_link">
+              <FormField label="Registration Link" id="registration_link">
                 <Input id="registration_link" type="url" placeholder="https://forms.gle/..." value={form.registration_link} onChange={set('registration_link')} />
               </FormField>
 
-              <FormField label="Banner Image (optional)" id="banner_image">
+              <FormField label="Banner Image" id="banner_image">
                 {form.banner_image ? (
                   <div className="space-y-2">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -334,13 +334,13 @@ export default function Submit() {
               <div className="border-t border-border pt-6">
                 <h3 className="mb-4 font-semibold">Organiser Info</h3>
                 <div className="space-y-4">
-                  <FormField label="Organiser Name (optional)" id="organiser_name">
+                  <FormField label="Organiser Name" id="organiser_name">
                     <Input id="organiser_name" placeholder="e.g. KL Esports Club" maxLength={100} value={form.organiser_name} onChange={set('organiser_name')} />
                   </FormField>
-                  <FormField label="Contact (WhatsApp / email) (optional)" id="organiser_contact">
+                  <FormField label="Contact (WhatsApp / email)" id="organiser_contact">
                     <Input id="organiser_contact" placeholder="e.g. +6012-3456789" maxLength={100} value={form.organiser_contact} onChange={set('organiser_contact')} />
                   </FormField>
-                  <FormField label="Email (for approval notification) (optional)" id="organiser_email">
+                  <FormField label="Email (for approval notification)" id="organiser_email">
                     <Input id="organiser_email" type="email" placeholder="organiser@example.com" value={form.organiser_email} onChange={set('organiser_email')} />
                   </FormField>
                 </div>
@@ -375,10 +375,13 @@ export default function Submit() {
   )
 }
 
-function FormField({ label, id, children }: { label: string; id: string; children: React.ReactNode }) {
+function FormField({ label, id, required, children }: { label: string; id: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>
+        {label}
+        {required && <span className="ml-0.5 text-primary" aria-hidden="true">*</span>}
+      </Label>
       {children}
     </div>
   )
