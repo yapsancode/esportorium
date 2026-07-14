@@ -128,8 +128,9 @@ assemble_context → generate → evaluate ──all pass──→ store → END
 **assemble_context** — deterministic, no LLM. Loads the 5 context files,
 calls tournament_tool.get_active_tournaments(days_ahead=30) (approved
 tournaments only, upcoming/current per the derived-status convention,
-returns title, format, state, dates, registration_deadline, prize_pool_rm,
-max_teams, registration_link), pulls last 5 published growth posts.
+returns title, status, format, state, dates, registration_deadline,
+prize_pool_rm, additional_prizes, max_teams, registration_link), pulls
+last 5 published growth posts.
 
 **generate** — one harness.generate() call (purpose="generate").
 Output: 3 Threads posts spread across at least 2 different pillars +
