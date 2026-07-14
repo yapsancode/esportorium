@@ -6,3 +6,10 @@ rely on this.
 """
 from app.models.organiser import Organiser  # noqa: F401
 from app.models.tournament import Tournament  # noqa: F401
+from app.models.growth import (  # noqa: F401
+    GrowthContentIdea,
+    GrowthGeneratedPost,
+    GrowthLearning,
+    GrowthLLMCall,
+    GrowthPerformanceMetric,
+)
