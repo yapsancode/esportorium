@@ -1,6 +1,6 @@
 # Phase 1 Spec — AI Growth Engine (Generate, Don't Publish)
 
-Status: approved for build · Owner: founder · Version: 1.0 (2026-07-14)
+Status: approved for build · Owner: founder · Version: 1.1 (2026-07-15 )
 
 ## Goal
 
