@@ -59,7 +59,7 @@ Models: `backend/app/models/` — status is always derived from dates, never sto
 
 ## AI Growth Engine (app/ai_growth/)
 
-**Required reading before any growth work:** [@backend/specs/growth-phase-1.md](backend/specs/growth-phase-1.md). Non-negotiables:
+**Required reading before any growth work:** [@backend/specs/growth-phase-1.md](backend/specs/growth-phase-1.md). **The spec is read-only during implementation** — if code and spec disagree, stop and ask. Never edit the spec to match the code. Non-negotiables:
 
 - **All model calls go through `app/ai_growth/harness.py`** — no other file imports an LLM client/SDK
 - **Prompts live only in `prompts.py`**, version-tagged (e.g. `GENERATE_V1`); version recorded on posts and llm_calls
