@@ -1,6 +1,6 @@
 # Audience
 
-Dua audiens. Satu suara. Setiap post cakap dengan SATU je.
+Dua audience. Satu suara. Setiap post cakap dengan SATU je.
 
 ## 1. Players (default — kalau tak dinyatakan, post untuk mereka)
 - Siapa: pemain MLBB Malaysia, 16–30. Squad ranked yang belum pernah
@@ -21,6 +21,6 @@ Dua audiens. Satu suara. Setiap post cakap dengan SATU je.
   bila cakap dengan organiser — diorang pun komuniti sama.
 
 ## Peraturan
-- Jangan campur dua audiens dalam satu post. "Players cari, organisers
+- Jangan campur dua audience dalam satu post. "Players cari, organisers
   nak dijumpai" — dua ask bertentangan, satu post satu ask.
 - Kalau post tak jelas untuk siapa, ia untuk players.
