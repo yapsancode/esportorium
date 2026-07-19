@@ -102,11 +102,17 @@ State (`state.py`):
 
 ```python
 class GrowthState(TypedDict):
-    brand_context: str        # knowledge: brand + audience + rules
-    voice_examples: str       # knowledge: few-shot tone anchor
-    trends: str               # live: trends.md
-    tournaments: list[dict]   # live: tournament_tool
-    recent_posts: list[str]   # memory: last 5 published (don't repeat)
+    # knowledge (static files) — kept separate so the judge can be handed a subset
+    brand: str                # brand.md
+    audience: str             # audience.md
+    rules: str                # rules.md
+    voice_examples: str       # voice_examples.md
+    # live
+    trends: str               # trends.md
+    tournaments: list[dict]   # tournament_tool
+    # memory
+    recent_posts: list[str]   # last 5 published — "don't repeat"
+    # pipeline
     drafts: list[dict]
     evaluations: list[dict]
     retry_count: int

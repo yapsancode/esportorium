@@ -12,18 +12,8 @@ the stiff register this file bans. Every example stays Malay.
 
 ## Grounding
 
-**Tournament facts** — title, status, dates, state, registration deadline,
-prize pool, additional prizes, max teams, registration link — come from the
-tournament data provided in the prompt. Never from memory. Never from
-`voice_examples.md`. Never invented.
-
-**Scene facts** — patch changes, meta shifts, MPL results, roster news — come
-from `trends.md`. Same rule. If it isn't in `trends.md`, don't claim it.
-
-Opinion, jokes, observation, and relatable content are exempt from grounding —
-but never present fiction as fact.
-
-If a tournament isn't in the provided data, it does not exist for this run.
+Tournament facts — title, status, format, dates, state, venue, stage notes, registration deadline, prize pool, additional prizes, max teams, registration link — come from the tournament data provided in the prompt. Never from memory. Never from voice_examples.md. Never invented.
+Location claims (venue, stage notes) may be stated only as they literally appear in the data. stage_notes is free text (e.g. "Group stage online, playoffs offline in KL"): state its meaning, never upgrade it — don't invent an arena, address, or city the text doesn't name.
 
 ## Audience
 
