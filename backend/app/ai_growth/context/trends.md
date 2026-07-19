@@ -1,6 +1,6 @@
 # Trends
 
-**Last updated: [FILL THIS IN — YYYY-MM-DD]**
+**Last updated: 2026-07-19**
 
 Live file. Rotates. Feeds the `scene_trend` pillar and at least one TikTok
 script per run.
@@ -48,12 +48,7 @@ One or two lines. What happened. Facts only.
 
 ## Current
 
-<!--
-Nothing here yet. Add entries before the first real run.
-
-Example of the shape (NOT a real fact — delete before use):
-
-### [2026-07-14] Patch 1.9.4 hero adjustments
-Hero X nerfed on cooldowns, hero Y buffed. Draft priority shifting in
-ranked; unclear yet whether it holds at tournament level.
--->
+### [2026-07-08] Patch 2.1.90 — tank junglers nerfed
+Baxia, Fredrinn, Akai nerfed (jungle speed + damage cut). Esmeralda, Nolan,
+Aulus, Minsitthar, Argus buffed. Meta shifting from tank junglers toward
+damage junglers in ranked.
