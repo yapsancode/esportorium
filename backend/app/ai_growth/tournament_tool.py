@@ -34,6 +34,8 @@ def _to_dict(t: Tournament) -> dict:
         "status": t.status,  # derived from dates (never stored)
         "format": t.format,
         "state": t.state,
+        "venue": t.venue,
+        "stage_notes": t.stage_notes,
         "dates": {
             "start": t.start_date.isoformat() if t.start_date else None,
             "end": t.end_date.isoformat() if t.end_date else None,
