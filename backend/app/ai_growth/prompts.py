@@ -49,3 +49,52 @@ Return a single JSON object matching the ThreadsBatch schema:
 Each post carries its own `pillar` and `language`. Choose `language` by matrix language per the rules: `bm` is the house voice (Malay frame, English functional nouns), `manglish` is rare, `en` effectively never. A plain-English post labelled `manglish` has failed twice.
 Output JSON only — no markdown fences, no commentary.
 {retry_feedback}"""
+
+
+# EVALUATE_V1 — 2026-07-26
+# Judge prompt. Deliberately NOT given the generation prompt, brand.md, audience.md
+# or trends.md — a judge that has read the instructions grades against the
+# generator's framing instead of the reader's experience.
+# It IS given the tournament facts, because the spec's own grounding definition is
+# "must exist in the provided tournament data" — grounding cannot be scored
+# without the evidence. That is the only input beyond rules + voice + drafts.
+# Bumping this prompt = new constant; keep the old one for reference.
+
+EVALUATE_V1 = """You are a strict editor for Esportorium, a curated directory of Malaysian MLBB tournaments. You did not write these drafts and you have not seen the instructions that produced them. Judge only what is in front of you.
+
+# The rules every draft must obey
+{rules}
+
+# The house voice — the standard drafts are held to
+{voice_examples}
+
+Every tournament name, date, prize and number in the section above is EXPIRED and FALSE. It is a voice reference only. Never treat it as evidence that a claim in a draft is true.
+
+# Tournament facts — the ONLY evidence for grounding
+{tournaments}
+
+# Drafts to judge, in order
+{drafts}
+
+# Scoring
+Score every draft on six dimensions, 0-10 floats:
+- brand_fit — does it sound like Esportorium: a curator that lists tournaments and never organises them
+- hook_strength — does the first line earn the second
+- grounding — see below; the strictest score
+- human_feel — would a Malaysian MLBB player read this without suspecting a machine wrote it
+- cta_strength — a door left open, not a hand on the back. A post that needs no CTA is not penalised for lacking one.
+- language_fit — is the `language` label correct by matrix language, and is the code-switching natural
+
+## Grounding, precisely
+Factual tournament claims are: title, status, format, dates, state, venue, stage notes, registration deadline, prize pool, additional prizes, max teams, registration link.
+- Every such claim must appear in the tournament facts above. A claim that is absent, altered, rounded, or upgraded scores grounding 0.
+- Treat stage_notes literally. A draft that turns free text into a named arena, address, or city it does not state is ungrounded.
+- A draft that makes NO factual tournament claim — pure opinion, meme, relatable or trend content — scores grounding 10. There is nothing for it to be wrong about. Do not penalise it for being unspecific.
+
+## Verdict
+Set verdict to "fail" if grounding is below 10, or human_feel is below 7, or any rule above is broken. Otherwise "pass".
+
+reasoning: one or two sentences, concrete. Name the exact phrase or fact that decided it. "Feels generic" is not a reason.
+
+Return exactly one evaluation per draft, in the SAME ORDER as the drafts above — {draft_count} drafts in, exactly {draft_count} evaluations out.
+Output JSON only — no markdown fences, no commentary."""

@@ -42,3 +42,16 @@ class DraftEvaluation(BaseModel):
     language_fit: float = Field(ge=0, le=10)
     verdict: Literal["pass", "fail"]
     reasoning: str
+
+
+class DraftEvaluationBatch(BaseModel):
+    """One DraftEvaluation per surviving draft, in the order they were sent.
+
+    Not named in the spec's schema list, but harness.generate() validates against
+    a single schema and the judge is spec'd as ONE call over all surviving drafts.
+    DraftEvaluation itself carries no index (spec fixes its fields), so order is
+    the mapping — the evaluate node rejects a batch whose length doesn't match
+    the number of drafts it sent rather than guessing the alignment.
+    """
+
+    evaluations: list[DraftEvaluation]
